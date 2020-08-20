@@ -118,23 +118,20 @@ function y_derivative(plf::Plefka, y, params, t_i, delta_t, fields::Fields)
 	
 	if plf.orderParam == "linear"
 	
-		if plf.alphaOrder == 1
-			dydt = params[1] .- params[2] .* y[:,t_i] .- plf.α*fields.hatTheta1[:,t_i]
-		elseif plf.alphaOrder == 2
-			dydt = params[1] .- params[2] .* y[:,t_i] .- plf.α*fields.hatTheta1[:,t_i] .-
-			0.5*plf.α^2*fields.hatTheta2[:,t_i]
+		dydt = params[1] .- params[2] .* y[:,t_i] .- plf.α*fields.hatTheta1[:,t_i]
+
+		if plf.alphaOrder == 2
+			dydt .-= 0.5*plf.α^2*fields.hatTheta2[:,t_i]
 		end
 		
 	elseif plf.orderParam == "quad"
 	
-		if plf.alphaOrder == 1
-			dydt = params[1] .- params[2] .* y[:,t_i] .- plf.α*fields.hatTheta1[:,t_i] .-
-			plf.α*delta_t*sum(y[:,:] .* fields.hatR1[:,t_i,:], dims=2)
-		elseif plf.alphaOrder == 2
-			dydt = params[1] .- params[2] .* y[:,t_i] .- plf.α*fields.hatTheta1[:,t_i] .-
-			plf.α*delta_t*sum(y[:,:] .* fields.hatR1[:,t_i,:], dims=2) .-
-			0.5*plf.α^2*fields.hatTheta2[:,t_i] .-
-			0.5*plf.α^2*delta_t*sum(y[:,:] .* fields.hatR2[:,t_i,:], dims=2)
+		dydt = params[1] .- params[2] .* y[:,t_i] .- plf.α*fields.hatTheta1[:,t_i] .-
+		plf.α*delta_t*sum(y[:,:].*fields.hatR1[:,t_i,:], dims=2)
+		
+		if plf.alphaOrder == 2
+			dydt .-= 0.5*plf.α^2*fields.hatTheta2[:,t_i] .+
+			0.5*plf.α^2*delta_t*sum(y[:,:].*fields.hatR2[:,t_i,:], dims=2)
 		end
 		
 	end

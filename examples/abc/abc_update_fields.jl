@@ -47,14 +47,9 @@ function ABC_update_fields(plf::Plefka, k3, t_i, delta_t, y, resp, fields::Field
 		
 		if plf.alphaOrder == 2
 		
-			fields.hatTheta2[1,t_i] = 
-			2*delta_t*k3^2*y[1,t_i]*sum(y[1,:].*y[2,:].*resp[2,t_i,:])
-			
-			fields.hatTheta2[2,t_i] = 
-			2*delta_t*k3^2*y[2,t_i]*sum(y[1,:].*y[2,:].*resp[1,t_i,:])
-			
-			fields.hatTheta2[3,t_i] = 
-			2*delta_t*k3^2*sum(y[1,:].*y[2,:].*resp[1,t_i,:].*resp[2,t_i,:])
+			fields.hatTheta2[1,t_i] = 2*delta_t*k3^2*y[1,t_i]*sum(y[1,:].*y[2,:].*resp[2,t_i,:])
+			fields.hatTheta2[2,t_i] = 2*delta_t*k3^2*y[2,t_i]*sum(y[1,:].*y[2,:].*resp[1,t_i,:])
+			fields.hatTheta2[3,t_i] = 2*delta_t*k3^2*sum(y[1,:].*y[2,:].*resp[1,t_i,:].*resp[2,t_i,:])
 			
 			fields.hatR2[1,t_i,:] = -2*k3^2 .* y[2,:].*resp[2,t_i,:].*(y[1,:] .+ resp[1,t_i,:])
 			fields.hatR2[2,t_i,:] = -2*k3^2 .* y[1,:].*resp[1,t_i,:].*(y[2,:] .+ resp[2,t_i,:])
