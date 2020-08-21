@@ -81,15 +81,15 @@ function update_responses(plf::Plefka, resp, params, delta_t, t_i, hatR1, hatR2)
 		
 		if plf.alphaOrder == 1
 			for k in t_i:-1:1
-				x = plf.α*delta_t^2*sum((hatR1[:,t_i,:].*resp[:,:,k])[k:t_i],dims=1)
+				x = plf.α*delta_t^2*sum((hatR1[:,t_i,:].*resp[:,:,k])[:,k:t_i], dims=2)
 				resp[:,t_i+1,k] = (1 .- params[2]*delta_t).*resp[:,t_i,k] .- x
 			end
 			
 		elseif plf.alphaOrder == 2
 		
 			for k in t_i:-1:1
-				x = plf.α*delta_t^2*sum((hatR1[:,t_i,:].*resp[:,:,k])[k:t_i],dims=1)
-				xx = 0.5*plf.α^2*delta_t^2*sum((hatR2[:,t_i,:].*resp[:,:,k])[k:t_i],dims=1)
+				x = plf.α*delta_t^2*sum((hatR1[:,t_i,:].*resp[:,:,k])[:,k:t_i], dims=2)
+				xx = 0.5*plf.α^2*delta_t^2*sum((hatR2[:,t_i,:].*resp[:,:,k])[:,k:t_i], dims=2)
 				resp[:,t_i+1,k] = (1 .- params[2]*delta_t).*resp[:,t_i,k] .- x .- xx
 			end
 		
