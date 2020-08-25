@@ -3,8 +3,6 @@ cd(@__DIR__)
 Pkg.activate("../../")
 using CRN
 
-include("plotting.jl")
-
 # Parameters
 num_species = 3     # number of species
 num_int = 1         # number of interaction reaction

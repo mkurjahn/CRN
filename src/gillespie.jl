@@ -267,12 +267,12 @@ end
      
 
 """
-function gillespie_full(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64)
+function gillespie_full(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64; poisson=true)
 
-    copyN = zeros(Int16, length(ta), size(s_i,2), num_runs)
+    copyN = zeros(Int32, length(ta), size(s_i,2), num_runs)
     
     for i in 1:num_runs
-	    x0 = rand.(Poisson.(w0))
+	    poisson ? x0 = rand.(Poisson.(w0)) : x0 = floor.(Int, w0)
 	    erg = gillespie_tspan(x0, params, s_i, r_i, ta)
 	    copyN[:,:,i] = erg[:,:]
     end
@@ -294,7 +294,7 @@ end
 
 
 """
-function gillespie_avg(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64)
+function gillespie_avg(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64, poisson=true)
 
     copyN = gillespie_full(w0, params, s_i, r_i, ta, num_runs)
     return Result(ta, reshape(mean(copyN, dims=3), length(ta), size(s_i,2))')
@@ -315,12 +315,12 @@ end
 	mean copy number of molecules.
 
 """
-function gillespie_avg_v2(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64)
+function gillespie_avg_v2(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64; poisson=true)
 
-	copyN = zeros(Int16, length(ta), size(s_i,2), num_runs)
+	copyN = zeros(Int32, length(ta), size(s_i,2), num_runs)
     
     for i in 1:num_runs
-	    x0 = rand.(Poisson.(w0))
+	    poisson ? x0 = rand.(Poisson.(w0)) : x0 = floor.(Int, w0)
 	    gil = gillespie(x0, params, s_i, r_i, ta[end])
 	    erg = regular_timeGrid(gil, ta).data
 	    copyN[:,:,i] = erg[:,:]

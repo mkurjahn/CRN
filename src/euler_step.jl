@@ -3,6 +3,7 @@ using LinearAlgebra
 export euler_step
 
 include("../examples/abc/abc_update_fields.jl")
+include("../examples/gene/gene_update_fields.jl")
 
 
 """
@@ -15,7 +16,7 @@ include("../examples/abc/abc_update_fields.jl")
 
 
 """
-function euler_step(x0, params, tspan, plf::Plefka)
+function euler_step(x0, params, tspan, plf::Plefka; ABC=true)
 
 	global num_species = length(params[1])
 	
@@ -44,7 +45,11 @@ function euler_step(x0, params, tspan, plf::Plefka)
 	for i in 1:len_ts-1
 		
 		# update fields
-		fields = ABC_update_fields(plf, params[3][1], i, dt, y, resp, fields)
+		if ABC
+			fields = ABC_update_fields(plf, params[3][1], i, dt, y, resp, fields)
+		else
+			fields = gene_update_fields(plf, params[3], i, dt, y, resp, fields)
+		end
 		
 		# update response functions
 		resp = update_responses(plf, resp, params, dt, i, fields.hatR1, fields.hatR2)

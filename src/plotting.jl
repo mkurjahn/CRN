@@ -3,17 +3,17 @@ using PyPlot
 export plot_trajectories, plot_deviation, plot_trajectories_and_deviation,
 		plot_responses, plot_hatR, plot_hatTheta
 
-font_size = 16
-rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
-font0 = Dict(
-        "font.size" => font_size,
-        "axes.labelweight" => "normal",
-        "axes.labelsize" => font_size,
-        "xtick.labelsize" => font_size,
-        "ytick.labelsize" => font_size,
-        "legend.fontsize" => font_size,
-		)
-merge!(rcParams, font0)
+#font_size = 16
+#rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
+#font0 = Dict(
+#        "font.size" => font_size,
+#        "axes.labelweight" => "normal",
+#        "axes.labelsize" => font_size,
+#        "xtick.labelsize" => font_size,
+#        "ytick.labelsize" => font_size,
+#        "legend.fontsize" => font_size,
+#		)
+#merge!(rcParams, font0)
 
 
 # Plot trajectories
