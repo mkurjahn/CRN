@@ -1,5 +1,8 @@
 using PyPlot
 
+export plot_trajectories, plot_deviation, plot_trajectories_and_deviation,
+		plot_responses, plot_hatR, plot_hatTheta
+
 font_size = 16
 rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
 font0 = Dict(
@@ -96,7 +99,7 @@ function plot_responses(resp::Responses)
 		img = axes[i].imshow(rr[i,:,:], aspect="equal", extent=lims, vmin=vmin, vmax=vmax)
 		axes[i].set_xlabel(L"$\tau - \tau^\prime$")
 		axes[i].set_title(L"$ R(\tau,\tau -\tau^\prime) $"*" for species $(i)")
-		i == num_species ? fig.colorbar(img, ax=vec(axes)) : nothing
+		i == ncols ? fig.colorbar(img, ax=vec(axes)) : nothing
 	end
 	
 end
@@ -132,7 +135,7 @@ function plot_hatR(plf::Plefka, tspan, hatR::Array{Float64,3}; quadR=false)
 		else 
 			axes[i].set_title(L"$\hat{R}_2(\tau,\tau -\tau^\prime)$"*" for species $(i)")
 		end
-		i == num_species ? fig.colorbar(img, ax=vec(axes)) : nothing
+		i == ncols ? fig.colorbar(img, ax=vec(axes)) : nothing
 	end
 	
 end
