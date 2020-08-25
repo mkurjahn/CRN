@@ -81,14 +81,14 @@ function update_responses(plf::Plefka, resp, params, delta_t, t_i, hatR1, hatR2)
 		
 		if plf.alphaOrder == 1
 			for k in t_i:-1:1
-				x = plf.α*delta_t^2*sum((hatR1[:,t_i,:].*resp[:,:,k])[:,k:t_i], dims=2)
+				x = plf.α*delta_t^2*sum((hatR1[:,t_i+1,:].*resp[:,:,k])[:,k:t_i], dims=2)
 				resp[:,t_i+1,k] = (1 .- params[2]*delta_t).*resp[:,t_i,k] .- x
 			end
 			
 		elseif plf.alphaOrder == 2
 		
 			for k in t_i:-1:1
-				x = plf.α*delta_t^2*sum((hatR1[:,t_i,:].*resp[:,:,k])[:,k:t_i], dims=2)
+				x = plf.α*delta_t^2*sum((hatR1[:,t_i+1,:].*resp[:,:,k])[:,k:t_i], dims=2)
 				xx = 0.5*plf.α^2*delta_t^2*sum((hatR2[:,t_i,:].*resp[:,:,k])[:,k:t_i], dims=2)
 				resp[:,t_i+1,k] = (1 .- params[2]*delta_t).*resp[:,t_i,k] .- x .- xx
 			end
@@ -126,12 +126,10 @@ function y_derivative(plf::Plefka, y, params, t_i, delta_t, fields::Fields)
 		
 	elseif plf.orderParam == "quad"
 	
-		dydt = params[1] .- params[2] .* y[:,t_i] .- plf.α*fields.hatTheta1[:,t_i] .-
-		plf.α*delta_t*sum(y[:,:].*fields.hatR1[:,t_i,:], dims=2)
+		dydt = params[1] .- params[2] .* y[:,t_i] .- plf.α*fields.hatTheta1[:,t_i] .- plf.α*delta_t*sum(y[:,:].*fields.hatR1[:,t_i+1,:], dims=2)
 		
 		if plf.alphaOrder == 2
-			dydt .-= 0.5*plf.α^2*fields.hatTheta2[:,t_i] .+
-			0.5*plf.α^2*delta_t*sum(y[:,:].*fields.hatR2[:,t_i,:], dims=2)
+			dydt .-= 0.5*plf.α^2*fields.hatTheta2[:,t_i] .+ 0.5*plf.α^2*delta_t*sum(y[:,:].*fields.hatR2[:,t_i,:], dims=2)
 		end
 		
 	end

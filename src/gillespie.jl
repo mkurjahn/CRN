@@ -4,7 +4,7 @@ using DataFrames
 using StatsBase
 using LinearAlgebra
 
-export gillespie, gillespie_tspan, gillespie_full, gillespie_avg
+export gillespie, gillespie_tspan, gillespie_full, gillespie_avg, gillespie_avg_v2
 
 
 """
@@ -78,6 +78,45 @@ function prop_fct(x, params::Vector{Vector{Float64}}, r_i::Matrix{Int64})
 	end
 	return [params[1]; params[2].*x'; params[3].*Hint]
 end
+
+
+
+"""
+	regular_timeGrid(res, ta)
+	
+	Takes the output from the irregular time discretization
+	of the Gillespie algorithm and makes the time grid regular
+	
+	Uses as input
+	res		Result struct from the gillespie function
+	ta		Desired time discretization 
+	
+	Returns the evenly spaced time discretized Result
+	
+"""
+function regular_timeGrid(res::Result, ta::Vector{Float64})
+	
+	num_species = size(res.data, 2)		# number of species
+	l_ta = length(ta)					# length of time grid
+	
+	erg = zeros(l_ta, num_species)		# result 
+	i = 1
+	j = 1
+	
+	# loop
+	while i <= l_ta
+		if ta[i] <= res.time[j+1]
+			erg[i,:] = res.data[j,:]
+		else
+			i -= 1
+			j += 1
+		end
+		i += 1
+	end
+
+	return Result(ta, erg)
+end
+
 
 
 """
@@ -186,13 +225,13 @@ function gillespie_tspan(x0::Vector{Int64}, params::Vector{Vector{Float64}}, s_i
 		    end
 		    
 		    # update event
-		    if tm != ta[1]    
+		    #if tm != ta[1]    
 		        ev = pfsample(pf)
 		        deltax = view(nu,ev,:)
 		        for i in 1:nstates
 		            @inbounds x[1,i] += deltax[i]
 		        end
-		    end
+		    #end
 		    dt = rand(Exponential(1/sumpf))
 		    tm += dt
 		    
@@ -212,7 +251,7 @@ end
 
 
 """
-    gillespie_full(w0, params, ta, w0, N)
+    gillespie_full(w0, params, s_i, r_i, ta, N)
     
     Full N Gillespie Simulations with saved copy numbers.
     
@@ -244,7 +283,7 @@ end
 
 
 """
-    gillespie_avg(nu, k, tspan, w0, N)
+    gillespie_avg(w0, params, s_i, r_i, ta, N)
     
     Average of N Gillespie simulations.
     
@@ -261,6 +300,37 @@ function gillespie_avg(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i
     return Result(ta, reshape(mean(copyN, dims=3), length(ta), size(s_i,2))')
 
 end
+
+
+
+"""
+	gillespie_avg_v2(w0, params, s_i, r_i, ta, num_runs)
+	
+	Average of N Gillespie simulations.
+	
+	Same as gillespie_avg, but the regular time grid is taken after
+	the gillespie simulation and not within.
+	
+	Returns the mean result in a struct with time and
+	mean copy number of molecules.
+
+"""
+function gillespie_avg_v2(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64)
+
+	copyN = zeros(Int16, length(ta), size(s_i,2), num_runs)
+    
+    for i in 1:num_runs
+	    x0 = rand.(Poisson.(w0))
+	    gil = gillespie(x0, params, s_i, r_i, ta[end])
+	    erg = regular_timeGrid(gil, ta).data
+	    copyN[:,:,i] = erg[:,:]
+    end
+
+	return Result(ta, reshape(mean(copyN, dims=3), length(ta), size(s_i,2))')
+	
+end
+
+
 
 
 
