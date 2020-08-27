@@ -1,4 +1,6 @@
-export c_mn
+using IterTools
+
+export c_mn, e_i, m_list, n_list
 
 """
 	c_mn(m, n, s_i, r_i, k3, y)
@@ -16,7 +18,7 @@ export c_mn
 	Returns the time dependent c_mn  
 
 """
-function c_mn(m::Vector{Int64}, n::Vector{Int64}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, k3::Vector{Float64}, y::Matrix{Float64})
+function c_mn(m::Any, n::Any, s_i::Matrix{Int64}, r_i::Matrix{Int64}, k3::Vector{Float64}, y::Matrix{Float64})
 
 	num_species = size(y,1)		# number of species
 	num_int = length(k3)		# number of interaction reactions
@@ -34,7 +36,7 @@ function c_mn(m::Vector{Int64}, n::Vector{Int64}, s_i::Matrix{Int64}, r_i::Matri
 			
 			prod_mu *= binomial(r_i[β,i], n[i])
 			
-			if r_i[β,i] >= n[i]
+			if r_i[β,i] > n[i]
 				prod_mu .*=  y[i,:].^(r_i[β,i]-n[i])
 			end
 				
@@ -69,5 +71,47 @@ function e_i(n::Int64, i::Int64)
 end
 
 
-# max_m = maximum([maximum(r_i, dims=1); maximum(s_i, dims=1)], dims=1)
-# max_n = maximum(r_i, dims=1)
+"""
+	mn_list(max_mn)
+	
+	Generic function to calculate either m_list() or n_list()
+
+"""
+function mn_list(max_mn::Vector{Int64})
+	
+	num_species = length(max_mn)
+	
+	x = [collect(0:max_mn[j]) for j in 1:num_species]
+	m_list = collect(Iterators.product(x...))
+	
+	return reshape(m_list, length(m_list), 1)
+
+end
+
+
+"""
+	n_list(r_i)
+
+	Returns a list of possible vectors n
+	The input r_i is the reactant coefficient matrix
+	
+"""
+function n_list(r_i)
+	max_n = maximum(r_i, dims=1)
+	return mn_list(vec(max_n))
+end
+
+
+"""
+	m_list(s_i, r_i)
+	
+	Returns a list of possible vectors m
+	The input s_i and r_i are the stoichiometric 
+	matrices
+	
+"""
+function m_list(s_i, r_i)
+	max_m = maximum([maximum(r_i, dims=1); maximum(s_i, dims=1)], dims=1)
+	return mn_list(vec(max_m))
+end
+
