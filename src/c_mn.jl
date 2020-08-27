@@ -24,10 +24,11 @@ function c_mn(m::Any, n::Any, s_i::Matrix{Int64}, r_i::Matrix{Int64}, k3::Vector
 	num_int = length(k3)		# number of interaction reactions
 	len_ts = size(y,2)			# length of time grid
 	res = zeros(len_ts)			# return vector
-	prod_mu = ones(len_ts)		# product with mu_i
-	prod1, prod2 = 1, 1			# initialize products
 	
 	for β in 1:num_int
+	
+		prod_mu = ones(len_ts)		# product with mu_i
+		prod1, prod2 = 1, 1			# initialize products
 		
 		for i in 1:num_species
 		
