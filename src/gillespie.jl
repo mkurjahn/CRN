@@ -73,7 +73,9 @@ function prop_fct(x, params::Vector{Vector{Float64}}, r_i::Matrix{Int64})
 	Hint = ones(num_int)
 	for m in 1:num_int
 		for k in 1:length(params[1])
-			Hint[m] *= x[k]^r_i[m,k]
+			for r in 0:r_i[m,k]-1
+				@inbounds Hint[m] *= (x[k]-r)
+			end
 		end
 	end
 	return [params[1]; params[2].*x'; params[3].*Hint]
@@ -120,15 +122,16 @@ end
 
 
 """
-    gillespie(x0, params, s_i, r_i, tf)
+    gillespie(x0, params, nu, r_i, tf)
     
     Gillespie simulation of one specific trajectory and
     irregular time discretization.
     
     Uses as input
     x0      Vector of molecule numbers
-    s_i,r_i Stoichiometric matrix, reactions in rows
     params  Vector of reaction constants
+    nu		Stoichiometric matrix, reactions in rows
+    r_i		Reactant coefficients
     tf      Final time when the reaction has to stop
     
     Returns the result in a struct with time and copy 
@@ -136,7 +139,7 @@ end
 
 
 """
-function gillespie(x0::Vector{Int64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, tf::Float64)
+function gillespie(x0::Vector{Int64}, params::Vector{Vector{Float64}}, nu::Matrix{Int64}, r_i::Matrix{Int64}, tf::Float64)
     
     ta = Vector{Float64}()
     t = 0.0
@@ -146,9 +149,6 @@ function gillespie(x0::Vector{Int64}, params::Vector{Vector{Float64}}, s_i::Matr
     nstates = length(x0)
     x = copy(x0')
     xa = copy(x0)
-    
-    # Stochiometric matrix
-    nu = calc_nu(length(params[1]), s_i, r_i)
 
     # Number of reactions
     numpf = size(nu, 1)
@@ -158,8 +158,8 @@ function gillespie(x0::Vector{Int64}, params::Vector{Vector{Float64}}, s_i::Matr
         pf = prop_fct(x,params,r_i)
         sumpf = sum(pf)
         if sumpf == 0.0
-            println("zeroprop")
-            break
+            # break condition
+            t += 2*tf
         end
         dt = rand(Exponential(1/sumpf))
         t += dt
@@ -183,68 +183,68 @@ end
 
 
 """
-    gillespie_tspan(x0, params, s_i, r_i, ta)
+    gillespie_tspan(x0, params, nu, r_i, time_grid)
     
     Gillespie simulation of one specific trajectory and
     even spaced time discretization.
     
     Uses as input
     x0      Vector of molecule numbers
-    nu      Stoichiometric matrix, reactions in rows
     params  Vector of reaction constants
-    ta      Vector of time discretization
+    nu      Stoichiometric matrix, reactions in rows
+    r_i		Reactant coefficients
+    time_grid	Vector of time discretization
     
     Returns the result in a struct with time and copy 
     number of molecules. 
 
 
 """
-function gillespie_tspan(x0::Vector{Int64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64})
+function gillespie_tspan(x0::Vector{Int64}, params::Vector{Vector{Float64}}, nu::Matrix{Int64}, r_i::Matrix{Int64}, time_grid::Vector{Float64})
 
     # Set up initial x
     nstates = length(x0)
     x = copy(x0')
-    xa = copy(x0)
-    
-    # Stochiometric matrix
-    nu = calc_nu(length(params[1]), s_i, r_i)
+    xnew = copy(x)
+    xa = Vector{Int64}()
 
     # Number of reactions
     numpf = size(nu, 1)
 
-    tm = ta[1]
-    tf = ta[end]
+    tm = time_grid[1]
+    tf = time_grid[end]
     
-    for t in ta
+    for t in time_grid
+    
 		while tm <= t
+		
+			x = copy(xnew)
 		    pf = prop_fct(x,params,r_i)
 		    sumpf = sum(pf)
+		    
 		    if sumpf == 0.0
-		        #println("zeroprop")
-		        break
+		    	# break condition
+		        tm += 2*length(time_grid)
 		    end
 		    
-		    # update event
-		    #if tm != ta[1]    
-		        ev = pfsample(pf)
-		        deltax = view(nu,ev,:)
-		        for i in 1:nstates
-		            @inbounds x[1,i] += deltax[i]
-		        end
-		    #end
-		    dt = rand(Exponential(1/sumpf))
-		    tm += dt
-		    
+		    # update event    
+	        ev = pfsample(pf)
+	        deltax = view(nu,ev,:)
+	        for i in 1:nstates
+	            @inbounds xnew[1,i] += deltax[i]
+	        end
+
+		    tm += rand(Exponential(1/sumpf))
+			
 		end
 		
-	    if t != tf
-	        for xx in x
-	            push!(xa,xx)
-	        end
-	    end
+		for xx in x
+			push!(xa,xx)
+		end
+	    
 	end
 		
-	return transpose(reshape(xa,length(x),length(ta)))
+	return transpose(reshape(xa,length(x),length(time_grid)))
 	
 end
 
@@ -267,13 +267,18 @@ end
      
 
 """
-function gillespie_full(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64; poisson=true)
+function gillespie_full(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64)
 
+	# Stochiometric matrix
+	nu = calc_nu(length(params[1]), s_i, r_i)
+	
+    # Array to store results
     copyN = zeros(Int32, length(ta), size(s_i,2), num_runs)
     
-    for i in 1:num_runs
-	    poisson ? x0 = rand.(Poisson.(w0)) : x0 = floor.(Int, w0)
-	    erg = gillespie_tspan(x0, params, s_i, r_i, ta)
+    # loop over runs
+    @simd for i in 1:num_runs
+	    x0 = rand.(Poisson.(w0))
+	    erg = gillespie_tspan(x0, params, nu, r_i, ta)
 	    copyN[:,:,i] = erg[:,:]
     end
 
@@ -294,7 +299,7 @@ end
 
 
 """
-function gillespie_avg(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64, poisson=true)
+function gillespie_avg(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64)
 
     copyN = gillespie_full(w0, params, s_i, r_i, ta, num_runs)
     return Result(ta, reshape(mean(copyN, dims=3), length(ta), size(s_i,2))')
@@ -315,13 +320,18 @@ end
 	mean copy number of molecules.
 
 """
-function gillespie_avg_v2(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64; poisson=true)
+function gillespie_avg_v2(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i::Matrix{Int64}, r_i::Matrix{Int64}, ta::Vector{Float64}, num_runs::Int64)
 
-	copyN = zeros(Int32, length(ta), size(s_i,2), num_runs)
+	# Stochiometric matrix
+	nu = calc_nu(length(params[1]), s_i, r_i)
+	
+    # Array to store results
+    copyN = zeros(Int32, length(ta), size(s_i,2), num_runs)
     
-    for i in 1:num_runs
-	    poisson ? x0 = rand.(Poisson.(w0)) : x0 = floor.(Int, w0)
-	    gil = gillespie(x0, params, s_i, r_i, ta[end])
+    # loop over runs
+    @simd for i in 1:num_runs
+	    x0 = rand.(Poisson.(w0))
+	    gil = gillespie(x0, params, nu, r_i, ta[end])
 	    erg = regular_timeGrid(gil, ta).data
 	    copyN[:,:,i] = erg[:,:]
     end
