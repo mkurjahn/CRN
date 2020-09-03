@@ -4,6 +4,7 @@ Pkg.activate("../../")
 using CRN
 using PyPlot
 PyPlot.PyDict(PyPlot.matplotlib."rcParams")["font.size"] = 16
+using Statistics
 
 function params_study()
 
@@ -89,4 +90,34 @@ function plot_study(r)
 	
 	end
 
+end
+
+
+function steady_states(r)
+
+	(r_gil, r_pl1, r_pl2) = r
+	
+	# num of results (gil+plf1+plf2) × num of params study × num of species
+	S_states = zeros(length(r), length(r_gil), length(r_gil[1].data[:,1]))
+	
+	for i in 1:length(r)
+		for j in 1:length(r_gil)
+			S_states[i,j,:] = mean(r[i][j].data[:,end-10:end], dims=2)
+		end
+	end
+	
+	return S_states
+
+end
+
+
+function plot_steady_states(S_states)
+
+	c = ["red", "blue", "green"]
+	for i in 1:size(S_states, 3)	# num of species
+		for j in 1:size(S_states, 1)	# num of results
+			plot(1:size(S_states,2), S_states[j,:,i], color=c[j])
+		end
+		i == 1 ? legend(["GIL", "PLF_lin", "PLF_quad"]) : nothing
+	end
 end
