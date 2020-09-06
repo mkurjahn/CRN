@@ -91,10 +91,7 @@ function update_fields(plf::Plefka, s_i, r_i, k3, t_i, dt, y, resp, fields)
 			sum_n = zeros(len_ts)
 			for n in n_list(r_i)
 				if sum(n) > 1
-					prod_resp = ones(len_ts)
-					for j in 1:N
-						prod_resp .*= factorial(n[j])*(resp[j,t_i,:].^n[j])
-					end
+					prod_resp = calc_prod_resp(n, resp[:,t_i,:])
 					sum_n += c_mn(e_i(N,i), n, s_i, r_i, k3, y)[t_i]*c_mn(n, z, s_i, r_i, k3, y).*prod_resp
 				end
 			end
@@ -117,22 +114,16 @@ function update_fields(plf::Plefka, s_i, r_i, k3, t_i, dt, y, resp, fields)
 			local_R2 = 0
 			for n in n_list(r_i)
 				if sum(n) > 1
-					prod_resp = ones(len_ts)
-					for j in 1:N
-						prod_resp .*= factorial(n[j])*(resp[j,t_i,:].^n[j])
-					end
+					prod_resp = calc_prod_resp(n, resp[:,t_i,:])
 					c_n0 = c_mn(n, z, s_i, r_i, k3, y)
 					c_nei = c_mn(n, e_i(N,i), s_i, r_i, k3, y)
 					c_ein = c_mn(e_i(N,i), n, s_i, r_i, k3, y)[t_i]
 					c_einei = c_mn(e_i(N,i), n .+ e_i(N,i), s_i, r_i, k3, y)[t_i]
 					sum_T2 += (c_ein*c_n0 .- c_einei*c_n0*y[i,t_i] .- c_ein*c_nei.*y[i,:]).*prod_resp
 					sum_R2 += c_ein*c_nei.*prod_resp
-					local_R2 += sum(c_einei*c_n0.*prod_resp)
-				elseif n[i] != 1
-					prod_resp = ones(len_ts)
-					for j in 1:N
-						prod_resp .*= factorial(n[j])*(resp[j,t_i,:].^n[j])
-					end
+					local_R2 += sum((c_einei*c_n0.*prod_resp)[1:t_i])
+				elseif sum(n) == 1 && n[i] != 1 
+					prod_resp = calc_prod_resp(n, resp[:,t_i,:])
 					c_nei = c_mn(n, e_i(N,i), s_i, r_i, k3, y)
 					c_ein = c_mn(e_i(N,i), n, s_i, r_i, k3, y)[t_i]
 					sum_T2 -= c_ein*c_nei.*y[i,:].*prod_resp
