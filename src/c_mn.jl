@@ -73,6 +73,24 @@ end
 
 
 """
+
+
+"""
+function calc_prod_resp(n::Tuple, resp_ti::Matrix{Float64})
+
+	prod_resp = ones(size(resp_ti,2))
+	for j in 1:length(n)
+		if n[j] == 1
+			prod_resp .*= resp_ti[j,:]
+		elseif n[j] > 1
+			prod_resp .*= factorial(n[j])*(resp_ti[j,:].^n[j])
+		end
+	end
+	return prod_resp
+end
+
+
+"""
 	mn_list(max_mn)
 	
 	Generic function to calculate either m_list() or n_list()

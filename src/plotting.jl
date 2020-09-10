@@ -1,7 +1,7 @@
 using PyPlot
 
 export plot_trajectories, plot_deviation, plot_trajectories_and_deviation,
-		plot_responses, plot_hatR, plot_hatTheta
+		plot_responses, plot_hatR, plot_hatR_diag, plot_hatTheta
 
 #font_size = 16
 #rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
@@ -141,6 +141,23 @@ function plot_hatR(plf::Plefka, tspan, hatR::Array{Float64,3}; quadR=false)
 end
 
 
+# Plot hatR diagional
+function plot_hatR_diag(plf::Plefka, tspan, hatR::Array{Float64,3})
+
+	num_species = size(hatR,1)
+	dt = tspan[2] - tspan[1]
+	
+    figure(figsize=(20,5))
+    for i in 1:num_species
+        plot(tspan[1:end-1], [hatR[i,t+1,t]*dt for t in 1:length(tspan)-1])
+    end
+    legend(1:num_species)
+    xlabel("Time")
+    ylabel(L"$\hat{R}_1(\tau,\tau_-)\,\Delta t$")
+    
+end
+
+
 # Plot hatTheta
 function plot_hatTheta(plf::Plefka, fields::Fields)
 
@@ -153,7 +170,7 @@ function plot_hatTheta(plf::Plefka, fields::Fields)
 			plot(fields.time[1:end-1], fields.hatTheta1[i,1:end-1])
 		end
 		legend(1:num_species)
-		xlabel(L"$\tau$")
+		xlabel("Time")
 		ylabel(L"$\tilde{\theta}_1$")
 	
 	elseif plf.alphaOrder == 2
@@ -163,7 +180,7 @@ function plot_hatTheta(plf::Plefka, fields::Fields)
 			plot(fields.time[1:end-1], fields.hatTheta1[i,1:end-1])
 		end
 		legend(1:num_species)
-		xlabel(L"$\tau$")
+		xlabel("Time")
 		ylabel(L"$\tilde{\theta}_1$")
 		
 		subplot(122)
@@ -171,7 +188,7 @@ function plot_hatTheta(plf::Plefka, fields::Fields)
 			plot(fields.time[1:end-1], fields.hatTheta2[i,1:end-1])
 		end
 		legend(1:num_species)
-		xlabel(L"$\tau$")
+		xlabel("Time")
 		ylabel(L"$\tilde{\theta}_2$")
 	
 	end
