@@ -1,7 +1,8 @@
 using PyPlot
 
 export plot_trajectories, plot_deviation, plot_trajectories_and_deviation,
-		plot_responses, plot_hatR, plot_hatR_diag, plot_hatTheta
+		plot_responses, plot_responses_timeslice, plot_hatR, plot_hatR_diag, 
+		plot_hatTheta
 
 #font_size = 16
 #rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
@@ -105,9 +106,27 @@ function plot_responses(resp::Responses)
 end
 
 
+# Plot responses timeslice
+function plot_responses_timeslice(resp::Responses, timeslice)
+
+	num_species = size(resp.data,1)
+	ts = findall(x->x==timeslice, resp.time)
+	length(ts) != 1 ? error("No matching time slice!") : t = ts[1]
+	figure(figsize=(20,5))
+	
+	for i in 1:num_species
+		plot(resp.time, resp.data[i,t,:], linestyle="dashed")
+	end
+	
+	legend(1:num_species)
+	xlabel("Time")
+	ylabel(L"$ R(\tau="*string(timeslice)*L",\tau^\prime) $")
+
+end
+
 
 # Plot hatR
-function plot_hatR(plf::Plefka, tspan, hatR::Array{Float64,3}; quadR=false)
+function plot_hatR(tspan, hatR::Array{Float64,3}; quadR=false)
 
 	num_species = size(hatR,1)
 	
@@ -142,7 +161,7 @@ end
 
 
 # Plot hatR diagional
-function plot_hatR_diag(plf::Plefka, tspan, hatR::Array{Float64,3})
+function plot_hatR_diag(tspan, hatR::Array{Float64,3})
 
 	num_species = size(hatR,1)
 	dt = tspan[2] - tspan[1]
