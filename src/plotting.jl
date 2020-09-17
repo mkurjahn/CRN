@@ -126,8 +126,9 @@ end
 
 
 # Plot hatR
-function plot_hatR(tspan, hatR::Array{Float64,3}; quadR=false)
+function plot_hatR(tspan, fields::Fields_quad2)
 
+	hatR = fields.hatR2
 	num_species = size(hatR,1)
 	
 	ncols = 3
@@ -149,11 +150,7 @@ function plot_hatR(tspan, hatR::Array{Float64,3}; quadR=false)
 	for i in 1:num_species
 		img = axes[i].imshow(rr[i,:,:], aspect="equal", extent=lims, vmin=vmin, vmax=vmax)
 		axes[i].set_xlabel(L"$\tau - \tau^\prime$")
-		if !quadR
-			axes[i].set_title(L"$\hat{R}_1(\tau,\tau -\tau^\prime)$"*" for species $(i)")
-		else 
-			axes[i].set_title(L"$\hat{R}_2(\tau,\tau -\tau^\prime)$"*" for species $(i)")
-		end
+		axes[i].set_title(L"$\hat{R}_2(\tau,\tau -\tau^\prime)$"*" for species $(i)")
 		i == ncols ? fig.colorbar(img, ax=vec(axes)) : nothing
 	end
 	
@@ -161,14 +158,15 @@ end
 
 
 # Plot hatR diagional
-function plot_hatR_diag(tspan, hatR::Array{Float64,3})
+function plot_hatR_diag(tspan, fields)
 
+	hatR = fields.hatR1
 	num_species = size(hatR,1)
 	dt = tspan[2] - tspan[1]
 	
     figure(figsize=(20,5))
     for i in 1:num_species
-        plot(tspan[1:end-1], [hatR[i,t+1,t]*dt for t in 1:length(tspan)-1])
+        plot(tspan[1:end-1], hatR[i,1:end-1]*dt)
     end
     legend(1:num_species)
     xlabel("Time")
@@ -178,38 +176,57 @@ end
 
 
 # Plot hatTheta
-function plot_hatTheta(plf::Plefka, fields::Fields)
+function plot_hatTheta1(tspan, fields)
 
 	num_species = size(fields.hatTheta1,1)
 	figure(figsize=(20,5))
-	
-	if plf.alphaOrder == 1
-	
-		for i in 1:num_species
-			plot(fields.time[1:end-1], fields.hatTheta1[i,1:end-1])
-		end
-		legend(1:num_species)
-		xlabel("Time")
-		ylabel(L"$\tilde{\theta}_1$")
-	
-	elseif plf.alphaOrder == 2
 		
-		subplot(121)
-		for i in 1:num_species
-			plot(fields.time[1:end-1], fields.hatTheta1[i,1:end-1])
-		end
-		legend(1:num_species)
-		xlabel("Time")
-		ylabel(L"$\tilde{\theta}_1$")
-		
-		subplot(122)
-		for i in 1:num_species
-			plot(fields.time[1:end-1], fields.hatTheta2[i,1:end-1])
-		end
-		legend(1:num_species)
-		xlabel("Time")
-		ylabel(L"$\tilde{\theta}_2$")
-	
+	for i in 1:num_species
+		plot(tspan[1:end-1], fields.hatTheta1[i,1:end-1])
 	end
+	legend(1:num_species)
+	xlabel("Time")
+	ylabel(L"$\tilde{\theta}_1$")
+		
+end
+
+function plot_hatTheta(tspan, fields::Fields_lin1)
+	return plot_hatTheta1(tspan, fields)
+end
+
+function plot_hatTheta(tspan, fields::Fields_quad1)
+	return plot_hatTheta1(tspan, fields)
+end
+
+
+# Plot hatTheta
+function plot_hatTheta12(tspan, fields)
+
+	num_species = size(fields.hatTheta1,1)
+	figure(figsize=(20,5))
+		
+	subplot(121)
+	for i in 1:num_species
+		plot(tspan[1:end-1], fields.hatTheta1[i,1:end-1])
+	end
+	legend(1:num_species)
+	xlabel("Time")
+	ylabel(L"$\tilde{\theta}_1$")
 	
+	subplot(122)
+	for i in 1:num_species
+		plot(tspan[1:end-1], fields.hatTheta2[i,1:end-1])
+	end
+	legend(1:num_species)
+	xlabel("Time")
+	ylabel(L"$\tilde{\theta}_2$")
+	
+end
+
+function plot_hatTheta(tspan, fields::Fields_lin2)
+	return plot_hatTheta12(tspan, fields)
+end
+
+function plot_hatTheta(tspan, fields::Fields_quad2)
+	return plot_hatTheta12(tspan, fields)
 end

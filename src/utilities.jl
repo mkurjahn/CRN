@@ -36,20 +36,33 @@ end
 	struct Fields
 	
 	Struct with all auxiliary fields 
+	Differentiate between Plefka theory!
 	
 	Contains:
-	time
 	hatTheta1, 
 	hatTheta2, 
 	hatR1, 
 	hatR2
 
 """
-mutable struct Fields
-	time::Vector{Float64}
+mutable struct Fields_lin1
+	hatTheta1::Array{Float64,2}
+end
+
+mutable struct Fields_lin2
 	hatTheta1::Array{Float64,2}
 	hatTheta2::Array{Float64,2}
-	hatR1::Array{Float64,3}
+end
+
+mutable struct Fields_quad1
+	hatTheta1::Array{Float64,2}
+	hatR1::Array{Float64,2}
+end
+
+mutable struct Fields_quad2
+	hatTheta1::Array{Float64,2}
+	hatTheta2::Array{Float64,2}
+	hatR1::Array{Float64,2}
 	hatR2::Array{Float64,3}
 end
 
