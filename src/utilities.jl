@@ -1,4 +1,4 @@
-export Result, Responses, Fields, Plefka
+export Result, Responses, Fields, Plefka, status_update
 
 """
     struct Result
@@ -66,6 +66,7 @@ mutable struct Fields_quad2
 	hatR2::Array{Float64,3}
 end
 
+
 """
 	struct Plefka
 	
@@ -75,8 +76,6 @@ end
 	alpha		number between 0 and 1, typically == 1
 	alphaOrder	order of alpha expansion, either 1 or 2
 	orderParam	either 'linear' or 'quad'
-	
-	
 	
 """
 struct Plefka
@@ -95,4 +94,28 @@ struct Plefka
 		end
 		new(α, alphaOrder, orderParam)
 	end
+end
+
+
+"""
+	status_update(t, len_ts)
+	
+	Prints the status in percent from [0..100%] in 10% steps
+	
+	t		loop index
+	len_ts	length of the loop
+	
+	Put in a loop!
+
+"""
+function status_update(t, len_ts)
+	
+	if t == 1
+		println("[  0%]")
+	elseif t%(len_ts÷10) == 0 && t < 0.91*len_ts
+		println("[ ", round(Int, 100*t/len_ts), "%]")
+	elseif t == len_ts-1
+		println("[100%]")
+	end
+
 end
