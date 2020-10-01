@@ -14,7 +14,7 @@ export euler_step
 
 
 """
-function euler_step(x0, params, tspan, plf::Plefka, s_i, r_i)
+function euler_step(x0, params, tspan, plf::Plefka, s_i, r_i; invθ=false)
 
 	global num_species = length(params[1])
 	
@@ -52,7 +52,7 @@ function euler_step(x0, params, tspan, plf::Plefka, s_i, r_i)
 		end
 		
 		# Euler step
-		y[:,i+1] = y[:,i] + dt * y_derivative(y, params, i, dt, plf.α, fields)
+		y[:,i+1] = y[:,i] + dt * y_derivative(y, params, i, dt, plf.α, fields; invTheta=invθ)
 		
 	end
 	
@@ -262,7 +262,7 @@ end
 function update_responses!(resp, params, delta_t, t_i, α, fields::Fields_quad1)
 
 	for i in 1:size(resp,1)
-		x = α*delta_t^2*fields.hatR1[i,t_i+1].*resp[i,t_i,:]
+		x = α*delta_t^2*fields.hatR1[i,t_i].*resp[i,t_i,:]
 		resp[i,t_i+1,:] = (1 - params[2][i]*delta_t).*resp[i,t_i,:] .- x
 	end
 	resp[:,t_i+1,t_i+1] .= 1.0
@@ -281,7 +281,7 @@ end
 function update_responses!(resp, params, delta_t, t_i, α, fields::Fields_quad2)
 
 	for i in 1:size(resp,1)
-		x = α*delta_t^2*fields.hatR1[i,t_i+1].*resp[i,t_i,:]
+		x = α*delta_t^2*fields.hatR1[i,t_i].*resp[i,t_i,:]
 		for k in t_i:-1:1
 			xx = 0.5*α^2*delta_t^2*sum((fields.hatR2[i,t_i,:].*resp[i,:,k])[k:t_i])
 			resp[i,t_i+1,k] = (1 - params[2][i]*delta_t)*resp[i,t_i,k] - xx
@@ -302,7 +302,7 @@ end
 	returns dydt
 	
 """
-function y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin1)
+function y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin1; invTheta=false)
 	
 	dydt = params[1] .- params[2] .* y[:,t_i] .- α*fields.hatTheta1[:,t_i]
 	return dydt
@@ -318,13 +318,20 @@ end
 	returns dydt
 	
 """
-function y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin2)
+function y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin2; invTheta=false)
 	
-	t1 = α*fields.hatTheta1[:,t_i]
-	t2 = 0.5*α^2*fields.hatTheta2[:,t_i]
-	dydt = params[1] .- params[2] .* y[:,t_i] .- t1 .- t2
-	return dydt
-	
+	if !invTheta
+		t1 = α*fields.hatTheta1[:,t_i]
+		t2 = 0.5*α^2*fields.hatTheta2[:,t_i]
+		dydt = params[1] .- params[2] .* y[:,t_i] .- t1 .- t2
+		return dydt
+	else
+		t1 = fields.hatTheta1[:,t_i]
+		t2 = fields.hatTheta2[:,t_i]
+		dydt = params[1] .- params[2] .* y[:,t_i] .- α*t1 ./ ( 1 .- 0.5*α.*t2./t1 ) 
+		return dydt
+	end
+		
 end
 
 
@@ -337,10 +344,10 @@ end
 	returns dydt
 	
 """
-function y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad1)
+function y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad1; invTheta=false)
 	
 	t1 = α*fields.hatTheta1[:,t_i]
-	t_i != 1 ? r1 = α*delta_t*y[:,t_i-1].*fields.hatR1[:,t_i] : r1 = 0
+	r1 = α*delta_t*y[:,t_i].*fields.hatR1[:,t_i]
 	dydt = params[1] .- params[2] .* y[:,t_i] .- t1 .- r1
 	return dydt
 	
@@ -356,11 +363,11 @@ end
 	returns dydt
 	
 """
-function y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad2)
+function y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad2; invTheta=false)
 	
 	t1 = α*fields.hatTheta1[:,t_i]
 	t2 = 0.5*α^2*fields.hatTheta2[:,t_i]
-	t_i != 1 ? r1 = α*delta_t*y[:,t_i-1].*fields.hatR1[:,t_i] : r1 = 0
+	r1 = α*delta_t*y[:,t_i].*fields.hatR1[:,t_i]
 	r2 = 0.5*α^2*delta_t*sum(y[:,:].*fields.hatR2[:,t_i,:], dims=2)
 	dydt = params[1] .- params[2] .* y[:,t_i] .- t1 .- t2 .- r1 .- r2
 	return dydt
