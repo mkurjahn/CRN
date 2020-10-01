@@ -1,4 +1,4 @@
-export Result, Responses, Fields, Plefka, status_update
+export Result, Responses, Fields, Plefka, Parameters, tspan, status_update
 
 """
     struct Result
@@ -94,6 +94,45 @@ struct Plefka
 		end
 		new(α, alphaOrder, orderParam)
 	end
+end
+
+
+"""
+	mutable struct Parameters
+	
+	inherits all important information about the 
+	parameters of the system
+	
+	x0		initial condition
+	k		reaction rates
+	s_i		stoichiometric products
+	r_i		stoichiometric reactants
+	t_init	initial time
+	t_final	final time
+	delta_t	time discretization
+
+"""
+mutable struct Parameters
+	x0::Vector{Float64}
+	k::Vector{Vector{Float64}}
+	s_i::Matrix{Int64}
+	r_i::Matrix{Int64}
+	t_init::Float64
+	t_final::Float64
+	delta_t::Float64
+end
+
+
+"""
+	tspan(p::Parameters)
+	
+	return an array of the time grid
+	according to the time discretization
+	in the Parameters set p.
+
+"""
+function tspan(p::Parameters)
+	return collect(p.t_init:p.delta_t:p.t_final)	
 end
 
 
