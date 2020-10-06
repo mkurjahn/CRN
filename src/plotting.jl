@@ -2,22 +2,48 @@ using PyPlot
 
 export plot_trajectories, plot_deviation, plot_trajectories_and_deviation,
 		plot_responses, plot_responses_timeslice, plot_hatR, plot_hatR_diag, 
-		plot_hatTheta
+		plot_hatTheta, cut_res_tf, cut_resp_tf
 
-#font_size = 16
-#rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
-#font0 = Dict(
-#        "font.size" => font_size,
-#        "axes.labelweight" => "normal",
-#        "axes.labelsize" => font_size,
-#        "xtick.labelsize" => font_size,
-#        "ytick.labelsize" => font_size,
-#        "legend.fontsize" => font_size,
-#		)
-#merge!(rcParams, font0)
+"""
+	cut_res_tf(res::Result, tf)
+	
+	Only time grid up to a specified final time tf which has to be
+	a part of the vector res.time
+	
+	Returns the Result struct up to time tf
+
+"""
+function cut_res_tf(res::Result, tf)
+	ts = findall(x->x==tf, res.time)
+	length(ts) != 1 ? error("No matching time slice!") : t = ts[1]
+	return Result(res.time[1:t], res.data[:,1:t])
+end
 
 
-# Plot trajectories
+"""
+	cut_resp_tf(resp::Responses, tf)
+	
+	Only time grid up to a specified final time tf which has to be
+	a part of the vector res.time
+	
+	Returns the Response struct up to time tf
+
+"""
+function cut_resp_tf(resp::Responses, tf)
+	ts = findall(x->x==tf, resp.time)
+	length(ts) != 1 ? error("No matching time slice!") : t = ts[1]
+	return Responses(resp.time[1:t], resp.data[:,1:t,1:t])
+end
+
+
+"""
+	plot_trajectories(res::Result)
+	
+	Plots the trajectories for all species
+	
+	Use plot_trajectories(res::Result, tf) for plotting up to final time tf
+
+"""
 function plot_trajectories(res::Result)
 
 	num_species = size(res.data,1)
@@ -33,8 +59,23 @@ function plot_trajectories(res::Result)
 	
 end
 
+function plot_trajectories(res::Result, tf)
+	plot_trajectories(cut_res_tf(res, tf))
+end
 
-# Plot Deviation
+
+"""
+	plot_deviation(res::Result, ref::Result)
+	
+	Plots the deviation of res for all species to the reference ref 
+	(in most cases e.g. Gillespie)
+	
+	deviation = | res - ref | / ref
+	
+	Use plot_deviation(res::Result, ref::Result, tf) for plotting up to
+	final time tf
+
+"""
 function plot_deviation(res::Result, ref::Result)
 
 	num_species = size(res.data,1)
@@ -50,8 +91,23 @@ function plot_deviation(res::Result, ref::Result)
 	
 end
 
+function plot_deviation(res::Result, ref::Result, tf)
+	plot_deviation(cut_res_tf(res, tf), cut_res_tf(ref, tf))
+end
 
-# Plot trajectories and deviation
+
+"""
+	plot_trajectories_and_deviation(res::Result, ref::Result)
+	
+	Plots the trajectories and deviaton for all species.
+	
+	For more details, look at `plot_trajectories(...)`
+	and `plot_deviation(...)`
+	
+	Use plot_trajectories_and_deviation(res::Result, ref::Result, tf) for 
+	plotting up to final time tf
+
+"""
 function plot_trajectories_and_deviation(res::Result, ref::Result)
 
 	num_species = size(res.data,1)
@@ -75,8 +131,19 @@ function plot_trajectories_and_deviation(res::Result, ref::Result)
 	
 end
 
+function plot_trajectories_and_deviation(res::Result, ref::Result, tf)
+	plot_trajectories_and_deviation(cut_res_tf(res, tf), cut_res_tf(ref, tf))
+end
 
-# Plot responses
+
+"""
+	plot_responses(resp::Responses)
+	
+	Plots the response functions for all species
+	
+	Use plot_responses(resp::Responses, tf) for plotting up to final time tf
+
+"""
 function plot_responses(resp::Responses)
 
 	num_species = size(resp.data,1)
@@ -105,8 +172,19 @@ function plot_responses(resp::Responses)
 	
 end
 
+function plot_responses(resp::Responses, tf)
+	plot_responses(cut_resp_tf(resp, tf))
+end
 
-# Plot responses timeslice
+
+"""
+	plot_responses_timeslice(resp::Responses, timeslice)
+	
+	Plots the response for all species at a given timeslice
+	
+	R(t=timeslice, t')
+
+"""
 function plot_responses_timeslice(resp::Responses, timeslice)
 
 	num_species = size(resp.data,1)
@@ -125,7 +203,15 @@ function plot_responses_timeslice(resp::Responses, timeslice)
 end
 
 
-# Plot hatR
+"""
+	plot_hatR(tspan, fields::Fields_quad2)
+	
+	Plots the field hatR2 for the quadratic order parameter and alpha squared
+	case. 
+	
+	Needs improvement if number of species is not divisible by 3.
+
+"""
 function plot_hatR(tspan, fields::Fields_quad2)
 
 	hatR = fields.hatR2
@@ -157,7 +243,12 @@ function plot_hatR(tspan, fields::Fields_quad2)
 end
 
 
-# Plot hatR diagional
+"""
+	plot_hatR_diag(tspan, fields)
+	
+	Plots the hatR1 diagonal elements R1(τ,τ-Δt)
+
+"""
 function plot_hatR_diag(tspan, fields)
 
 	hatR = fields.hatR1
@@ -175,7 +266,7 @@ function plot_hatR_diag(tspan, fields)
 end
 
 
-# Plot hatTheta
+# Plot hatTheta1
 function plot_hatTheta1(tspan, fields)
 
 	num_species = size(fields.hatTheta1,1)
@@ -190,16 +281,28 @@ function plot_hatTheta1(tspan, fields)
 		
 end
 
+"""
+	plot_hatTheta(tspan, fields::Fields_lin1)
+	
+	Plots the hat Theta field for linear order parameters and linear alpha
+
+"""
 function plot_hatTheta(tspan, fields::Fields_lin1)
-	return plot_hatTheta1(tspan, fields)
+	plot_hatTheta1(tspan, fields)
 end
 
+"""
+	plot_hatTheta(tspan, fields::Fields_quad1)
+	
+	Plots the hat Theta field for quadratic order parameters and linear alpha
+
+"""
 function plot_hatTheta(tspan, fields::Fields_quad1)
-	return plot_hatTheta1(tspan, fields)
+	plot_hatTheta1(tspan, fields)
 end
 
 
-# Plot hatTheta
+# Plot hatTheta1 and hatTheta2
 function plot_hatTheta12(tspan, fields)
 
 	num_species = size(fields.hatTheta1,1)
@@ -223,10 +326,24 @@ function plot_hatTheta12(tspan, fields)
 	
 end
 
+"""
+	plot_hatTheta(tspan, fields::Fields_lin2)
+	
+	Plots the hat Theta fields 1 and 2 for linear order parameters and
+	alpha squared
+
+"""
 function plot_hatTheta(tspan, fields::Fields_lin2)
-	return plot_hatTheta12(tspan, fields)
+	plot_hatTheta12(tspan, fields)
 end
 
+"""
+	plot_hatTheta(tspan, fields::Fields_quad2)
+	
+	Plots the hat Theta fields 1 and 2 for quadratic order parameters and
+	alpha squared
+
+"""
 function plot_hatTheta(tspan, fields::Fields_quad2)
-	return plot_hatTheta12(tspan, fields)
+	plot_hatTheta12(tspan, fields)
 end
