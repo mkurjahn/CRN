@@ -19,7 +19,7 @@ using CRN
 
 ## Example Usage
 
-The usage of this framework will be demonstrated for the simple reaction $A+B\rightarrow C$ on top of the baseline reactions $X_i\rightleftharpoons\varnothing$ for $X_i\in\lbrace A,B,C \rbrace$. This means that the number of species is `num_species = 3` and number of interaction reactions is `num_int = 1`. 
+The usage of this framework will be demonstrated for the simple reaction `$A+B\rightarrow C$` on top of the baseline reactions `$X_i\rightleftharpoons\varnothing$` for `$X_i\in\lbrace A,B,C \rbrace$`. This means that the number of species is `num_species = 3` and number of interaction reactions is `num_int = 1`. 
 
 ### Define Parameters
 Define reaction constants for creation, annihilation and interaction reaction, respectively.
@@ -61,9 +61,9 @@ plot_trajectories(res_gil)
 
 ### Plefka linear order parameters
 
-Define the Plefka expansion with the $\alpha$-value, $\alpha$-order (up to first [1] or second [2] order) and the used order parameters ("linear" or "quad"). In this example, we only investigate the difference between first and second order in $\alpha$ for linear order parameters. 
+Define the Plefka expansion with the α-value, α-order (up to first [1] or second [2] order) and the used order parameters ("linear" or "quad"). In this example, we only investigate the difference between first and second order in αfor linear order parameters. 
 
-Truncating the expansion at first-order of $\alpha$, we get the results by
+Truncating the expansion at first-order of α, we get the results by
 ```julia
 plf_1 = Plefka(1.0, 1, "linear")
 res_plf_1 = euler_step(p.x0, p.k, ts, plf_1, p.s_i, p.r_i)
@@ -71,7 +71,7 @@ plot_trajectories_and_deviation(res_plf_1[1], res_gil)
 ```
 ![Plefka_11](figures/plefka_1.png)
 
-For second order of $\alpha$, we get the results by
+For second order of α, we get the results by
 ```julia
 plf_2 = Plefka(1.0, 2, "linear")
 res_plf_2 = euler_step(p.x0, p.k, ts, plf_2, p.s_i, p.r_i)
