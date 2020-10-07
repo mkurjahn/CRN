@@ -35,7 +35,7 @@ s_i[1,:] = [0 0 1]
 r_i[1,:] = [1 1 0]
 ```
 
-Define start time, end time and time step $\Delta t$
+Define start time, end time and time step Δt
 ```julia
 t_init  = 0.0    # start time
 t_final = 5.0    # end time
