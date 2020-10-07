@@ -4,16 +4,13 @@ Framework for Chemical Reaction Networks.
 
 ## Install this package
 
-Clone the package from this Gitlab website
-```
-git clone https://gitlab.gwdg.de/m.kurjahn/crn.git
+Open `julia`, type "`]`" to go the package mode and then add the package
+```julia 
+pkg> add https://gitlab.gwdg.de/m.kurjahn/crn.git
 ```
 
-Go to the directory, open `julia` and type
+Go back to the normal mode with backspace and use the package via
 ```julia
-using Pkg
-cd(@__DIR__)
-Pkg.activate("../../")
 using CRN
 ```
 
