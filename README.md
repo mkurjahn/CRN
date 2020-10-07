@@ -19,7 +19,7 @@ using CRN
 
 ## Example Usage
 
-The usage of this framework will be demonstrated for the simple reaction `$A+B\rightarrow C$` on top of the baseline reactions `$X_i\rightleftharpoons\varnothing$` for `$X_i\in\lbrace A,B,C \rbrace$`. This means that the number of species is `num_species = 3` and number of interaction reactions is `num_int = 1`. 
+The usage of this framework will be demonstrated for the simple reaction $`A+B\rightarrow C`$ on top of the baseline reactions $`X_i\rightleftharpoons\varnothing`$ for $`X_i\in\lbrace A,B,C \rbrace`$. This means that the number of species is `num_species = 3` and number of interaction reactions is `num_int = 1`. 
 
 ### Define Parameters
 Define reaction constants for creation, annihilation and interaction reaction, respectively.
