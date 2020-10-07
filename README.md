@@ -58,7 +58,7 @@ plot_trajectories(res_gil)
 
 ### Plefka linear order parameters
 
-Define the Plefka expansion with the α-value, α-order (up to first [1] or second [2] order) and the used order parameters ("linear" or "quad"). In this example, we only investigate the difference between first and second order in αfor linear order parameters. 
+Define the Plefka expansion with the α-value, α-order (up to first [1] or second [2] order) and the used order parameters ("linear" or "quad"). In this example, we only investigate the difference between first and second order in α for linear order parameters. 
 
 Truncating the expansion at first-order of α, we get the results by
 ```julia
@@ -76,7 +76,7 @@ plot_trajectories_and_deviation(res_plf_2[1], res_gil)
 ```
 ![Plefka_11](figures/plefka_2.png)
 
-The advantage of the Plefka expansion can be seen by exploiting that we have now access to the response functions and correction fields.
+We have now access to the response functions and correction fields:
 ```julia
 plot_responses(res_plf_2[2])
 plot_hatTheta(ts, res_plf_2[3])
