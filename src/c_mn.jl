@@ -37,8 +37,67 @@ function c_mn(m::Any, n::Any, s_i::Matrix{Int64}, r_i::Matrix{Int64}, k3::Vector
 			
 			prod_mu *= binomial(r_i[β,i], n[i])
 			
-			if r_i[β,i] > n[i]
+			if r_i[β,i] == n[i]+1
+				prod_mu .*= y[i,:]
+			elseif r_i[β,i] == n[i]+2
+				prod_mu .*=  y[i,:].^2
+			elseif r_i[β,i] > n[i]+2
 				prod_mu .*=  y[i,:].^(r_i[β,i]-n[i])
+			end
+				
+		end
+		
+		res += k3[β] * (prod1 - prod2) * prod_mu
+		
+	end
+	
+	return res
+
+end
+
+
+"""
+	c_mn(m, n, s_i, r_i, k3, y, t)
+	
+	Calculates the c_mn for general networks, evaluated at time step t
+	
+	Uses as input
+	m		Vector of integer
+	n		Vector of integer
+	s_i		stoichiometric coefficient for products
+	r_i		stoichiometric coefficient for reactants
+	k3		reaction rate for interactions
+	y		molecule numbers
+	t		time step
+	
+	Returns the c_mn at time step t
+
+"""
+function c_mn(m::Any, n::Any, s_i::Matrix{Int64}, r_i::Matrix{Int64}, k3::Vector{Float64}, y::Matrix{Float64}, t::Int64)
+
+	num_species = size(y,1)		# number of species
+	num_int = length(k3)		# number of interaction reactions
+	len_ts = size(y,2)			# length of time grid
+	res = 0.0					# return value
+	
+	for β in 1:num_int
+	
+		prod_mu = 1.0				# product with mu_i
+		prod1, prod2 = 1, 1			# initialize products
+		
+		for i in 1:num_species
+		
+			prod1 *= binomial(s_i[β,i], m[i])
+			prod2 *= binomial(r_i[β,i], m[i])
+			
+			prod_mu *= binomial(r_i[β,i], n[i])
+			
+			if r_i[β,i] == n[i]+1
+				prod_mu *= y[i,t]
+			elseif r_i[β,i] == n[i]+2
+				prod_mu *=  y[i,t]^2
+			elseif r_i[β,i] > n[i]+2
+				prod_mu *=  y[i,t]^(r_i[β,i]-n[i])
 			end
 				
 		end
