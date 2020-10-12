@@ -5,16 +5,28 @@ export euler_step
 
 
 """
-    euler_step(x0, params, tspan, plf::Plefka, s_i, r_i)
+    euler_step(x0, params, tspan, plf::Plefka, s_i, r_i, invFunc)
     
     Initializes the fields and runs the dynamics. 
     Uses an Euler step integrator.
     
-    Returns a Struct with time and trajectories
+    Uses as input
+    x0		Initial condition
+    params	Reaction rates
+    tspan	time grid vector
+    plf		Plefka struct
+    s_i,r_i Stoichiometric matrix, reactions in rows
+    invFunc	Function, on which the expansion is based.
+    
+    If no function `invFunc` is specified, the default f(x)=1+x function
+    will be used. Note that the defined function has to have the same
+    Taylor expansion as f(x)=1+x.
+    
+    Returns a 3-element list with trajectories, responses and fields		
 
 
 """
-function euler_step(x0, params, tspan, plf::Plefka, s_i, r_i, ThetaFunc)
+function euler_step(x0, params, tspan, plf::Plefka, s_i, r_i, invFunc)
 
 	global num_species = length(params[1])
 	
@@ -48,11 +60,11 @@ function euler_step(x0, params, tspan, plf::Plefka, s_i, r_i, ThetaFunc)
 		if plf.orderParam == "linear"
 			update_responses!(resp, params, dt, i)
 		else
-			update_responses!(resp, params, dt, i, plf.α, fields)
+			update_responses!(resp, params, dt, i, plf.α, fields, invFunc)
 		end
 		
 		# Euler step
-		y[:,i+1] = y[:,i] + dt * y_derivative(y, params, i, dt, plf.α, fields, ThetaFunc)
+		y[:,i+1] = y[:,i] + dt * y_derivative(y, params, i, dt, plf.α, fields, invFunc)
 		
 	end
 	
@@ -257,14 +269,14 @@ end
 
 
 """
-	update_responses!(resp, params, delta_t, t_i, α, fields::Fields_quad1)
+	update_responses!(resp, params, delta_t, t_i, α, fields::Fields_quad1, invFunc)
 	
 	Updates the responses for quadratic order parameters (alpha lin)
 	
 	Returns the updated response functions
 	
 """
-function update_responses!(resp, params, delta_t, t_i, α, fields::Fields_quad1)
+function update_responses!(resp, params, delta_t, t_i, α, fields::Fields_quad1, invFunc)
 
 	for i in 1:size(resp,1)
 		x = α*delta_t^2*fields.hatR1[i,t_i].*resp[i,t_i,:]
@@ -276,22 +288,22 @@ end
 
 
 """
-	update_responses!(resp, params, delta_t, t_i, α, fields::Fields_quad2)
+	update_responses!(resp, params, delta_t, t_i, α, fields::Fields_quad2, invFunc)
 	
 	Updates the responses for quadratic order parameters (alpha quad)
 	
 	Returns the updated response functions
 	
 """
-function update_responses!(resp, params, delta_t, t_i, α, fields::Fields_quad2)
+function update_responses!(resp, params, delta_t, t_i, α, fields::Fields_quad2, invFunc)
 
 	for i in 1:size(resp,1)
-		x = α*delta_t^2*fields.hatR1[i,t_i].*resp[i,t_i,:]
 		for k in t_i:-1:1
+			x = α*delta_t^2*fields.hatR1[i,t_i]*resp[i,t_i,k]
 			xx = 0.5*α^2*delta_t^2*sum((fields.hatR2[i,t_i,:].*resp[i,:,k])[k:t_i])
-			resp[i,t_i+1,k] = (1 - params[2][i]*delta_t)*resp[i,t_i,k] - xx
+			x == 0 ? corr = 0 : corr = x * invFunc(xx/x)
+			resp[i,t_i+1,k] = (1 - params[2][i]*delta_t)*resp[i,t_i,k] - corr
 		end
-		resp[i,t_i+1,:] .-= x
 	end
 	resp[:,t_i+1,t_i+1] .= 1.0
 
@@ -300,14 +312,14 @@ end
 
 
 """
-	y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin1)
+	y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin1, invFunc)
 	
 	calculates the dy/dt derivative for the euler integration
 	
 	returns dydt
 	
 """
-function y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin1, ThetaFunc)
+function y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin1, invFunc)
 	
 	dydt = params[1] .- params[2] .* y[:,t_i] .- α*fields.hatTheta1[:,t_i]
 	return dydt
@@ -316,19 +328,22 @@ end
 
 
 """
-	y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin2)
+	y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin2, invFunc)
 	
 	calculates the dy/dt derivative for the euler integration
 	
 	returns dydt
 	
 """
-function y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin2, ThetaFunc)
+function y_derivative(y, params, t_i, delta_t, α, fields::Fields_lin2, invFunc)
 	
-	t1 = α*fields.hatTheta1[:,t_i]
-	t2 = 0.5*α^2*fields.hatTheta2[:,t_i]
-	any(t1 .== 0.0) ? x = t2 : x = t2./t1
-	dydt = params[1] .- params[2] .* y[:,t_i] .- t1 .* ThetaFunc(x)
+	dydt = zeros(size(y,1))
+	for i in 1:size(y,1)
+		t1 = α*fields.hatTheta1[i,t_i]
+		t2 = 0.5*α^2*fields.hatTheta2[i,t_i]
+		t1 == 0.0 ? x = 0 : x = t1 * invFunc(t2/t1)
+		dydt[i] = params[1][i] - params[2][i] * y[i,t_i] - x
+	end
 	return dydt
 		
 end
@@ -336,14 +351,14 @@ end
 
 
 """
-	y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad1)
+	y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad1, invFunc)
 	
 	calculates the dy/dt derivative for the euler integration
 	
 	returns dydt
 	
 """
-function y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad1, ThetaFunc)
+function y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad1, invFunc)
 	
 	t1 = α*fields.hatTheta1[:,t_i]
 	r1 = α*delta_t*y[:,t_i].*fields.hatR1[:,t_i]
@@ -355,20 +370,24 @@ end
 
 
 """
-	y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad2)
+	y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad2, invFunc)
 	
 	calculates the dy/dt derivative for the euler integration
 	
 	returns dydt
 	
 """
-function y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad2, ThetaFunc)
+function y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad2, invFunc)
 	
-	t1 = α*fields.hatTheta1[:,t_i]
-	t2 = 0.5*α^2*fields.hatTheta2[:,t_i]
-	r1 = α*delta_t*y[:,t_i].*fields.hatR1[:,t_i]
-	r2 = 0.5*α^2*delta_t*sum(y[:,:].*fields.hatR2[:,t_i,:], dims=2)
-	dydt = params[1] .- params[2] .* y[:,t_i] .- t1 .- t2 .- r1 .- r2
+	dydt = zeros(size(y,1))
+	for i in 1:size(y,1)
+		t1 = α*fields.hatTheta1[i,t_i]
+		t2 = 0.5*α^2*fields.hatTheta2[i,t_i]
+		r1 = α*delta_t*y[i,t_i].*fields.hatR1[i,t_i]
+		r2 = 0.5*α^2*delta_t*sum(y[i,:].*fields.hatR2[i,t_i,:])
+		t1+r1 == 0.0 ? x = 0 : x = (t1+r1) * invFunc((t2+r2)/(t1+r1))
+		dydt[i] = params[1][i] - params[2][i] * y[i,t_i] - x
+	end
 	return dydt
 
 end
