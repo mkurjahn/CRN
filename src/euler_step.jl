@@ -287,8 +287,7 @@ end
 function update_responses!(resp, params, delta_t, t_i, α, fields::Fields_quad1, invFunc)
 
 	for i in 1:size(resp,1)
-		x = α*delta_t^2*fields.hatR1[i,t_i].*resp[i,t_i,:]
-		resp[i,t_i+1,:] = (1 - params[2][i]*delta_t).*resp[i,t_i,:] .- x
+		resp[i,t_i+1,:] = (1 - params[2][i]*delta_t - α*delta_t^2*fields.hatR1[i,t_i]) .* resp[i,t_i,:]
 	end
 	resp[:,t_i+1,t_i+1] .= 1.0
 	
