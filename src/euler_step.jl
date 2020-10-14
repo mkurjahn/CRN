@@ -77,7 +77,15 @@ end
 
 function euler_step(x0, params, tspan, plf::Plefka, s_i, r_i)
 	@. f_theta(x) = 1 + x
-	return euler_step(x0, params, tspan, plf::Plefka, s_i, r_i, f_theta)
+	return euler_step(x0, params, tspan, plf, s_i, r_i, f_theta)
+end
+
+function euler_step(p::Parameters, plf::Plefka)
+	return euler_step(p.x0, p.k, tspan(p), plf, p.s_i, p.r_i)
+end
+
+function euler_step(p::Parameters, plf::Plefka, f_theta)
+	return euler_step(p.x0, p.k, tspan(p), plf, p.s_i, p.r_i, f_theta)
 end
 
 
