@@ -271,7 +271,7 @@ function print_fields(p::Parameters, plf::Plefka, k_param, species; disconnected
 						
 					if sum(n) > 1
 						
-						all([r3; r4; r5; r6] .== 0) ? print("") : print(" + ")
+						firstprint || all([r3; r4; r5; r6] .== 0) ? print("") : print(" + ")
 						
 						if any(r3 .!= 0) && any(r4 .!= 0)
 							firstprint ? print("-2Δt sum[ ") : print(" + ")
