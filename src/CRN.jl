@@ -7,5 +7,6 @@ include("euler_step.jl")
 include("c_mn.jl")
 include("plotting.jl")
 include("print_fields.jl")
+include("master_op.jl")
 
 end # module
