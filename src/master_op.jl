@@ -1,6 +1,8 @@
 using IterTools
 using LinearAlgebra
 
+#include("/home/maxi/ownCloud/Master/Simulations/testing/initialize.jl")
+
 function master_operator(max_num, num_species, p::Parameters, α)
 
 	params = p.k
@@ -37,24 +39,22 @@ function master_operator(max_num, num_species, p::Parameters, α)
 				master[idx_s, idx_t] += params[1][j]
 			end
 			
-			# Interaction
-			for β in 1:length(params[3])
+		end
 			
-				new_state = tuple([(s[m] - s_i[β,m] + r_i[β,m]) for m in 1:num_species]...)
-				
-				if all(state_space[1] .<= new_state) && all(state_space[end] .>= new_state)
-					println(new_state)
-					
-					idx = findfirst(x->x==new_state, state_space)
-					r = α*params[3][β]
-					for n in 1:num_species
-						for p in 0:r_i[β,n]
-							r *= state_space[idx][n] - p
-						end
+		# Interaction
+		for β in 1:length(params[3])
+		
+			new_state = tuple([(s[m] - s_i[β,m] + r_i[β,m]) for m in 1:num_species]...)
+			
+			if all(state_space[1] .<= new_state) && all(state_space[end] .>= new_state)
+				idx = findfirst(x->x==new_state, state_space)
+				r = α*params[3][β]
+				for n in 1:num_species
+					for p in 0:r_i[β,n]-1
+						r *= (state_space[idx][n] - p)
 					end
-					master[idx_s, idx] += r
 				end
-			
+				master[idx_s, idx] += r
 			end
 		
 		end
@@ -72,17 +72,16 @@ function steady_state_master_op(master, state_space)
 
 	num_species = length(state_space[1])
 	
-	eig_val = eigvals(master)
-	eig_vec = eigvecs(master)
+	E = eigen(master, sortby=nothing)
 	
-	max_eig_idx = argmax(abs.(eig_val))
-	sum_eigvecs = sum(abs.(eig_vec[:,max_eig_idx]))
-	
+	max_eig_idx = argmax(real.(E.values))
+	sum_eigvecs = sum(abs.(E.vectors[:,max_eig_idx]))
+	#return eig_val
 	x0 = zeros(num_species)
 	
 	for i in 1:length(state_space)
 		for j in 1:num_species
-			x0[j] += state_space[i][j] * abs(eig_vec[i,max_eig_idx]) / sum_eigvecs
+			x0[j] += state_space[i][j] * abs(E.vectors[i,max_eig_idx]) / sum_eigvecs
 		end
 	end
 	
@@ -91,8 +90,7 @@ function steady_state_master_op(master, state_space)
 end
 
 
-#include("/home/maxi/ownCloud/Master/Simulations/testing/initialize.jl")
 #p = ABC_params()
-#(m,s) = master_operator(7, 3, p, 1.0)
+#(m,s) = master_operator(10, 3, p, 1.0)
 #steady_state_master_op(m, s)
 
