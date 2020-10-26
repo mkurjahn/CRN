@@ -1,6 +1,7 @@
 using IterTools
 using LinearAlgebra
 using Distributions
+using OrdinaryDiffEq
 
 export master_operator, steady_state_masterOP, dynamics_masterOP
 
@@ -176,7 +177,7 @@ end
 
 
 """
-	dynamics_masterOP(master, state_space, tspan, x0)
+	dynamics_masterOP(master, state_space, tspan, x0, method)
 	
 	Runs the dynamics for the master operator using an euler step integrator.
 	
@@ -184,25 +185,33 @@ end
 	master		master operator
 	state_space	truncated state space
 	tspan		time grid
-	x0			initial condition for copy numbers	
+	x0			initial condition for copy numbers
+	method		integration algorithm. If not specified: default is Tsit5()
 	
-	Returns is in a Result struct with time_grid and mean copy numbers
+	You can find a list of available solvers at https://diffeq.sciml.ai/stable/solvers/ode_solve/
+	
+	Returns a Result struct with time_grid and mean copy numbers
 
 """
-function dynamics_masterOP(master, state_space, tspan::Vector{Float64}, x0::Vector{Float64})
+function dynamics_masterOP(master, state_space, tspan::Vector{Float64}, x0::Vector{Float64}, method)
 
-	init_distr = initial_distr_state_space(state_space, x0)
-	p = copy(init_distr)		# initial probability distribution
+	# Differential equation
+	function f!(du,u,M,t)
+		du .= M*u
+	end
 	
-	dt = tspan[2] - tspan[1]	# delta_t time discretization
+	p0 = initial_distr_state_space(state_space, x0)
+	
+	dt = tspan[2] - tspan[1]		# delta_t time discretization
 	num_species = length(state_space[1])	# number of species
 	y = zeros(num_species, length(tspan))	# returned mean copy numbers
-	y[:,1] = x0					# initial condition
-	
-	# run the dynamics
-	for i in 1:length(tspan)-1
-		p .+= dt .* (master * p)
-		y[:,i+1] = calc_mean_masterOP(p, state_space)				
+	y[:,1] = x0			# initial condition
+
+	# Solve the differential equation    
+    P = ode_solver(f!, master, tspan, p0, method; savedt=true)
+    
+	for t in 2:length(tspan)
+		y[:,t] = calc_mean_masterOP(P.data[:,t], state_space)
 	end
 	
 	return Result(tspan, y)
@@ -210,4 +219,8 @@ function dynamics_masterOP(master, state_space, tspan::Vector{Float64}, x0::Vect
 end
 
 
+function dynamics_masterOP(master, state_space, tspan::Vector{Float64}, x0::Vector{Float64})
+	println("No integration algorithm specified! Using Tsit5() as default!")
+	dynamics_masterOP(master, state_space, tspan, x0, Tsit5)
+end
 
