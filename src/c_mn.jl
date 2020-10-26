@@ -132,7 +132,12 @@ end
 
 
 """
-
+	calc_prod_resp(n::Tuple, resp_ti::Matrix{Float64})
+	
+	Calculates the product of responses with the vector n
+	The matrix resp_ti is 'species × time'
+	
+	output = prod_i (n_i)! * R_i(tau,:)
 
 """
 function calc_prod_resp(n::Tuple, resp_ti::Matrix{Float64})
@@ -143,6 +148,30 @@ function calc_prod_resp(n::Tuple, resp_ti::Matrix{Float64})
 			prod_resp .*= resp_ti[j,:]
 		elseif n[j] > 1
 			prod_resp .*= factorial(n[j])*(resp_ti[j,:].^n[j])
+		end
+	end
+	return prod_resp
+end
+
+
+"""
+	calc_prod_resp(n::Tuple, resp_ti::Vector{Float64})
+	
+	Calculates the product of responses with the vector n
+	The vector resp_ti is vector of response for each 
+	species but with specified time tau and tau'
+	
+	output = prod_i (n_i)! * R_i(tau,tau')
+
+"""
+function calc_prod_resp(n::Tuple, resp_ti::Vector{Float64})
+
+	prod_resp = 1.0
+	for j in 1:length(n)
+		if n[j] == 1
+			prod_resp *= resp_ti[j]
+		elseif n[j] > 1
+			prod_resp *= factorial(n[j])*(resp_ti[j]^n[j])
 		end
 	end
 	return prod_resp
