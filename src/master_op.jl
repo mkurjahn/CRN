@@ -3,9 +3,35 @@ using LinearAlgebra
 using Distributions
 using OrdinaryDiffEq
 
-export master_operator, steady_state_masterOP, dynamics_masterOP
+export get_max_num, master_operator, steady_state_masterOP, dynamics_masterOP
 
 
+"""
+	get_max_num(x0::Vector{Float64}, precision::Float64)
+	
+	Calculates the vector of maximum number of species allowed where the
+	Poisson distribution is below a certain probability (precision)
+	
+	Mean of Poisson distribution for each species is the initial condition x0
+	
+	Returns a vector of max_num
+
+"""
+function get_max_num(x0::Vector{Float64}, precision::Float64)
+	
+	num_species = length(x0)
+	max_num = zeros(Int, num_species)
+	for i in 1:num_species
+		x,n = 1,0
+		while abs(x) > precision
+			x = pdf(Poisson(x0[i]), n)
+			n += 1
+		end
+		max_num[i] = n
+	end
+	return max_num
+	
+end
 """
 	master_operator(p::Parameters, max_num; α=1.0)
 
@@ -21,7 +47,7 @@ export master_operator, steady_state_masterOP, dynamics_masterOP
 	Returns the master operator and state space in a tuple
 	
 """
-function master_operator(p::Parameters, max_num::Int; α=1.0)
+function master_operator(p::Parameters, max_num::Vector{Int}; α=1.0)
 	
 	num_species = length(p.k[1])	# number of species
 	params = p.k	# reaction rates
@@ -29,11 +55,12 @@ function master_operator(p::Parameters, max_num::Int; α=1.0)
 	r_i = p.r_i		# Stoichiometric reactants
 	
 	# state space
-	x = [collect(0:max_num) for j in 1:num_species]
+	x = [collect(0:max_num[j]) for j in 1:num_species]
 	state_space = reduce(vcat, collect(Iterators.product(x...)))
 	
 	# master operator
-	master = zeros((max_num+1)^num_species, (max_num+1)^num_species)
+	len_state_space = prod(max_num .+ 1)
+	master = zeros(len_state_space, len_state_space)
 	
 	for s in state_space
 	
@@ -46,7 +73,7 @@ function master_operator(p::Parameters, max_num::Int; α=1.0)
 			t = collect(s)
 			t[j] += 1
 			t = tuple(t...)
-			if t[j] <= max_num
+			if t[j] <= max_num[j]
 				idx_t = findfirst(x->x==t, state_space)		# index of t
 				master[idx_s, idx_t] += params[2][j]*state_space[idx_t][j]
 			end
@@ -87,6 +114,12 @@ function master_operator(p::Parameters, max_num::Int; α=1.0)
 	
 	return (master, state_space)
 
+end
+
+
+function master_operator(p::Parameters, max_num::Int; α=1.0)
+	max_num_vec = max_num .* ones(Int, length(p.k[1]))
+	return master_operator(p::Parameters, max_num_vec; α=α)
 end
 
 
