@@ -233,17 +233,13 @@ function dynamics_masterOP(master, state_space, tspan::Vector{Float64}, x0::Vect
 		du .= M*u
 	end
 	
-	p0 = initial_distr_state_space(state_space, x0)
-	
-	dt = tspan[2] - tspan[1]		# delta_t time discretization
-	num_species = length(state_space[1])	# number of species
-	y = zeros(num_species, length(tspan))	# returned mean copy numbers
-	y[:,1] = x0			# initial condition
-
-	# Solve the differential equation    
+	# Solve the differential equation
+	p0 = initial_distr_state_space(state_space, x0)    
     P = ode_solver(f!, master, tspan, p0, method; savedt=true)
     
-	for t in 2:length(tspan)
+    # Convert probability distributions to mean copy numbers
+	y = zeros(length(x0), length(tspan))    
+	for t in 1:length(tspan)
 		y[:,t] = calc_mean_masterOP(P.data[:,t], state_space)
 	end
 	

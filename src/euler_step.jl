@@ -235,7 +235,7 @@ function update_fields!(fields::Fields_quad2, s_i, r_i, k3, t_i, dt, y, resp)
 		sum_R2 = zeros(t_i)
 		
 		for n in n_list(r_i)
-			for t in 1:t_i-1
+			for t in 1:t_i
 				if sum(n) > 1
 					prod_resp = calc_prod_resp(n, resp[:,t_i,t])
 					c_n0 = c_mn(n, z, s_i, r_i, k3, y, t)
@@ -248,9 +248,9 @@ function update_fields!(fields::Fields_quad2, s_i, r_i, k3, t_i, dt, y, resp)
 					sum_R2[t] = c_ein*c_nei*prod_resp
 					local_R2 += c_einei*c_n0*prod_resp
 				elseif sum(n) == 1 && n[i] != 1 
-					prod_resp = calc_prod_resp(n, resp[:,t_i,t])
+					prod_resp = calc_prod_resp(n, resp[:,t_i+1,t])
 					c_nei = c_mn(n, e_i(N,i), s_i, r_i, k3, y, t)
-					c_ein = c_mn(e_i(N,i), n, s_i, r_i, k3, y, t_i)
+					c_ein = c_mn(e_i(N,i), n, s_i, r_i, k3, y, t_i+1)
 					sum_T2 -= c_ein*c_nei*y[i,t]*prod_resp
 					prod_resp = calc_prod_resp(n, resp[:,t_i,t+1])
 					c_nei = c_mn(n, e_i(N,i), s_i, r_i, k3, y, t+1)
@@ -398,7 +398,7 @@ function y_derivative(y, params, t_i, delta_t, α, fields::Fields_quad2, invFunc
 		t1 = α*fields.hatTheta1[i,t_i]
 		t2 = 0.5*α^2*fields.hatTheta2[i,t_i]
 		r1 = α*delta_t*y[i,t_i].*fields.hatR1[i,t_i]
-		r2 = 0.5*α^2*delta_t*sum(y[i,:].*fields.hatR2[i,t_i,:])
+		r2 = 0.5*α^2*delta_t*sum(y[i,:].*fields.hatR2[i,t_i+1,:])
 		t1+r1 == 0.0 ? x = 0 : x = (t1+r1) * invFunc((t2+r2)/(t1+r1))
 		dydt[i] = params[1][i] - params[2][i] * y[i,t_i] - x
 	end
