@@ -283,6 +283,9 @@ function gillespie_full(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_
 	return copyN
 end
 
+function gillespie_full(p::Parameters, num_runs::Int64)
+	return gillespie_full(p.x0, p.k, p.s_i, p.r_i, tspan(p), num_runs)
+end
 
 
 """
@@ -304,7 +307,9 @@ function gillespie_avg(w0::Vector{Float64}, params::Vector{Vector{Float64}}, s_i
 
 end
 
-
+function gillespie_avg(p::Parameters, num_runs::Int64)
+	return gillespie_avg(p.x0, p.k, p.s_i, p.r_i, tspan(p), num_runs)
+end
 
 """
 	gillespie_avg_v2(w0, params, s_i, r_i, ta, num_runs)
@@ -336,6 +341,10 @@ function gillespie_avg_v2(w0::Vector{Float64}, params::Vector{Vector{Float64}}, 
 
 	return Result(ta, reshape(mean(copyN, dims=3), length(ta), size(s_i,2))')
 	
+end
+
+function gillespie_avg_v2(p::Parameters, num_runs::Int64)
+	return gillespie_avg_v2(p.x0, p.k, p.s_i, p.r_i, tspan(p), num_runs)
 end
 
 
