@@ -1,18 +1,12 @@
 name = "CRN"
 uuid = "da75a55d-9cc8-480a-9f60-a17664246748"
-authors = ["Maximilian Kurjahn <m.kurjahn@theorie.physik.uni-goettingen.de>"]
+authors = ["Maximilian Kurjahn <m.kurjahn@stud.uni-goettingen.de>"]
 version = "0.1.1"
 
 [deps]
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
-DiffEqDiffTools = "01453d9d-ee7c-5054-8395-0335cb756afa"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
 IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
-Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
