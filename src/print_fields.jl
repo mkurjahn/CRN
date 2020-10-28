@@ -194,12 +194,12 @@ function print_fields(p::Parameters, plf::Plefka, k_param, species; disconnected
 	
 		for i in 1:N
 		
-			println("––––––––––\nSpecies: ", i)
+			println("––––––––––\nSpecies: ", species[i])
 			
 			# Theta1
 			print("Theta1 = ")
 			(r1,m1) = c_mn2(e_i(N,i), z)
-			all(r1 .== 0) ? print("0") : print_cmn_br(-r1, m1)
+			all(r1 .== 0) ? print("0") : print_cmn(-r1, m1)
 			println()
 				
 			if plf.alphaOrder == 2
@@ -228,7 +228,7 @@ function print_fields(p::Parameters, plf::Plefka, k_param, species; disconnected
 	
 		for i in 1:N
 		
-			println("––––––––––\nSpecies: ", i)
+			println("––––––––––\nSpecies: ", species[i])
 			
 			# Theta1
 			print("Theta1 = ")
@@ -239,14 +239,13 @@ function print_fields(p::Parameters, plf::Plefka, k_param, species; disconnected
 			if all(r1 .== 0) && all(r2 .== 0) 
 				print("0")
 			end
-			if disconnected_resp
+			if disconnected_resp && any(r2 .!= 0)
 				print(" + ")
 				print_cmn_br(r2, m2)
-				println("·μ", species[i])
-			else
-				println()
+				print("·μ", species[i])
 			end
-			
+			println()
+						
 			# hatR1
 			print("hatR1  = ")
 			if all(r2 .== 0)
@@ -270,8 +269,6 @@ function print_fields(p::Parameters, plf::Plefka, k_param, species; disconnected
 					(r6,m6) = c_mn2(e_i(N,i), n .+ e_i(N,i))
 						
 					if sum(n) > 1
-						
-						firstprint || all([r3; r4; r5; r6] .== 0) ? print("") : print(" + ")
 						
 						if any(r3 .!= 0) && any(r4 .!= 0)
 							firstprint ? print("-2Δt sum[ ") : print(" + ")
