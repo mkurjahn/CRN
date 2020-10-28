@@ -1,7 +1,5 @@
 using Distributions
-using Roots
-using DataFrames
-using StatsBase
+using Statistics
 using LinearAlgebra
 
 export gillespie, gillespie_tspan, gillespie_full, gillespie_avg, gillespie_avg_v2
