@@ -1,4 +1,6 @@
-export Result, Responses, Fields, Plefka, Parameters, tspan, status_update
+import Base.display
+
+export Result, Responses, Plefka, Parameters, tspan, status_update
 
 """
     struct Result
@@ -15,6 +17,10 @@ struct Result
     data::Array{Float64,2}
 end
 
+function Base.display(res::Result)
+	display([res.time'; res.data])
+end
+
 
 """
     struct Responses
@@ -29,6 +35,10 @@ end
 struct Responses
     time::Vector{Float64}
     data::Array{Float64,3}
+end
+
+function Base.display(resp::Responses)
+	display(permutedims(resp.data, (2,3,1)))
 end
 
 
@@ -48,15 +58,26 @@ end
 mutable struct Fields_lin1
 	hatTheta1::Array{Float64,2}
 end
+function Base.display(fields::Fields_lin1)
+	display(fields.hatTheta1)
+end
 
 mutable struct Fields_lin2
 	hatTheta1::Array{Float64,2}
 	hatTheta2::Array{Float64,2}
 end
+function Base.display(fields::Fields_lin2)
+	display(fields.hatTheta1)
+	display(fields.hatTheta2)
+end
 
 mutable struct Fields_quad1
 	hatTheta1::Array{Float64,2}
 	hatR1::Array{Float64,2}
+end
+function Base.display(fields::Fields_quad1)
+	display(fields.hatTheta1)
+	display(fields.hatR1)
 end
 
 mutable struct Fields_quad2
@@ -64,6 +85,12 @@ mutable struct Fields_quad2
 	hatTheta2::Array{Float64,2}
 	hatR1::Array{Float64,2}
 	hatR2::Array{Float64,3}
+end
+function Base.display(fields::Fields_quad2)
+	display(fields.hatTheta1)
+	display(fields.hatTheta2)
+	display(fields.hatR1)
+	display(permutedims(fields.hatR2, (2,3,1)))
 end
 
 
