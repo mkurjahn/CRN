@@ -131,11 +131,9 @@ end
 	Returns the steady state
 
 """
-function steady_state_masterOP(master, state_space)
+function steady_state_masterOP(master, state_space, E::Eigen)
 
 	num_species = length(state_space[1])	# number of species
-	
-	E = eigen(master, sortby=nothing)		# eigenvalues and eigenvectors
 	
 	# index of largest eigenvalue
 	max_eig_idx = argmax(real.(E.values))
@@ -155,6 +153,11 @@ function steady_state_masterOP(master, state_space)
 
 end
 
+
+function steady_state_masterOP(master, state_space)
+	E = eigen(master, sortby=nothing)		# eigenvalues and eigenvectors
+	return steady_state_masterOP(master, state_space, E)
+end
 
 """
 	calc_mean_masterOP(p, state_space)
@@ -251,5 +254,54 @@ end
 function dynamics_masterOP(master, state_space, tspan::Vector{Float64}, x0::Vector{Float64})
 	println("No integration algorithm specified! Using Tsit5() as default!")
 	dynamics_masterOP(master, state_space, tspan, x0, Tsit5)
+end
+
+
+"""
+	dynamics_masterOP_diag(master, state_space, E::Eigen, tspan, x0)
+	
+	Runs the dynamics for the master operator by diagonalizing the master
+	operator and directly calculates the matrix exponential.
+	
+	Solves the master equation $ dP/dt = M*P $ by the solution
+	$ P(t) = exp(M*t) * P0 $
+	
+	Input
+	master		master operator
+	state_space	truncated state space
+	E			Eigen values and vectors, calculate by `eigen(master)`
+	tspan		time grid
+	x0			initial condition for copy numbers
+	
+	Returns a Result struct with time_grid and mean copy numbers
+
+"""
+function dynamics_masterOP_diag(master, state_space, E::Eigen, tspan, x0)
+
+	er = E.vectors
+	el = inv(er)
+	d = real.(E.values)
+	
+	p0 = initial_distr_state_space(state_space, x0) 
+	y = zeros(length(x0), length(tspan))
+	
+	elp0 = el*p0
+	
+	for (t,t_i) in zip(tspan, 1:length(tspan))
+		p = zeros(length(state_space))
+		for i in 1:length(state_space)
+			@inbounds p[i] = abs(sum(er[i,:].*exp.(d*t).*elp0))
+		end
+		y[:,t_i] = calc_mean_masterOP(p, state_space)
+	end
+	
+	return Result(tspan, y)
+
+end
+
+
+function dynamics_masterOP_diag(master, state_space, tspan, x0)
+	E = eigen(master, sortby=nothing)		# eigenvalues and eigenvectors
+	return dynamics_masterOP_diag(master, state_space, E, tspan, x0)
 end
 
