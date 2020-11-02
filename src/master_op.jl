@@ -263,8 +263,9 @@ end
 	Runs the dynamics for the master operator by diagonalizing the master
 	operator and directly calculates the matrix exponential.
 	
-	Solves the master equation $ dP/dt = M*P $ by the solution
-	$ P(t) = exp(M*t) * P0 $
+	Solves the master equation   dP/dt = M*P   by the solution
+	
+		P(t) = exp(M*t) * P0
 	
 	Input
 	master		master operator
