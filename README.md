@@ -42,16 +42,15 @@ t_final = 5.0    # end time
 delta_t = 0.01   # time step
 ```
 
-As initial condition the steady state is chosen where we have no interaction reaction, i.e. `k3 = 0`, which is then `x0 = k1 ./ k2`. Combine all simulation parameters and get the time grid according to the defined time values.
+As initial condition the steady state is chosen where we have no interaction reaction, i.e. `k3 = 0`, which is then `x0 = k1 ./ k2`. Combine all simulation parameters:
 ```julia
 p = Parameters(x0, k, s_i, r_i, t_init, t_final, delta_t)
-ts = tspan(p)    # time grid
 ```
 
 ### Gillespie simulation
 Averaging the stochastic simulation over `100,000` different trajectories. Getting the result and plotting it with
 ```julia
-res_gil = gillespie_avg(p.x0, p.k, p.s_i, p.r_i, ts, 100000)
+res_gil = gillespie_avg(p, 100000)
 plot_trajectories(res_gil)
 ```
 ![Gillespie](figures/gillespie.png)
@@ -63,7 +62,7 @@ Define the Plefka expansion with the α-value, α-order (up to first [1] or seco
 Truncating the expansion at first-order of α, we get the results by
 ```julia
 plf_1 = Plefka(1.0, 1, "linear")
-res_plf_1 = euler_step(p.x0, p.k, ts, plf_1, p.s_i, p.r_i)
+res_plf_1 = euler_step(p, plf_1)
 plot_trajectories_and_deviation(res_plf_1[1], res_gil)
 ```
 ![Plefka_11](figures/plefka_1.png)
@@ -71,7 +70,7 @@ plot_trajectories_and_deviation(res_plf_1[1], res_gil)
 For second order of α, we get the results by
 ```julia
 plf_2 = Plefka(1.0, 2, "linear")
-res_plf_2 = euler_step(p.x0, p.k, ts, plf_2, p.s_i, p.r_i)
+res_plf_2 = euler_step(p, plf_2)
 plot_trajectories_and_deviation(res_plf_2[1], res_gil)
 ```
 ![Plefka_11](figures/plefka_2.png)
