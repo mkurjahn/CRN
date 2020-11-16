@@ -3,7 +3,8 @@ using LinearAlgebra
 using Distributions
 using OrdinaryDiffEq
 
-export get_max_num, master_operator, steady_state_masterOP, dynamics_masterOP
+export get_max_num, master_operator, steady_state_masterOP, dynamics_masterOP,
+		dynamics_masterOP_diag
 
 
 """
@@ -281,7 +282,7 @@ function dynamics_masterOP_diag(master, state_space, E::Eigen, tspan, x0)
 
 	er = E.vectors
 	el = inv(er)
-	d = real.(E.values)
+	d = E.values #real.(E.values)
 	
 	p0 = initial_distr_state_space(state_space, x0) 
 	y = zeros(length(x0), length(tspan))
