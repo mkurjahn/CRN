@@ -235,33 +235,29 @@ function update_fields!(fields::Fields_quad2, s_i, r_i, k3, t_i, dt, y, resp)
 		sum_R2 = zeros(t_i)
 		
 		for n in n_list(r_i)
+			c_ein = c_mn(e_i(N,i), n, s_i, r_i, k3, y, t_i)
+			c_einei = c_mn(e_i(N,i), n.+e_i(N,i), s_i, r_i, k3, y, t_i)
 			for t in 1:t_i
+				prod_resp = calc_prod_resp(n, resp[:,t_i,t+1])
 				if sum(n) > 1
-					prod_resp = calc_prod_resp(n, resp[:,t_i,t])
 					c_n0 = c_mn(n, z, s_i, r_i, k3, y, t)
-					c_nei = c_mn(n, e_i(N,i), s_i, r_i, k3, y, t)
-					c_ein = c_mn(e_i(N,i), n, s_i, r_i, k3, y, t_i)
-					c_einei = c_mn(e_i(N,i), n .+ e_i(N,i), s_i, r_i, k3, y, t_i)
-					sum_T2 += (c_ein*c_n0 - c_einei*c_n0*y[i,t_i] - c_ein*c_nei*y[i,t])*prod_resp
-					prod_resp = calc_prod_resp(n, resp[:,t_i,t+1])
-					c_nei = c_mn(n, e_i(N,i), s_i, r_i, k3, y, t+1)
-					sum_R2[t] = c_ein*c_nei*prod_resp
+					# hatTheta2
+					sum_T2 += (c_ein - c_einei*y[i,t_i])*c_n0*prod_resp
+					# local hatR2
 					local_R2 += c_einei*c_n0*prod_resp
-				elseif sum(n) == 1 && n[i] != 1 
-					prod_resp = calc_prod_resp(n, resp[:,t_i+1,t])
+				end
+				if sum(n) > 1 || (sum(n) == 1 && n[i] != 1)
 					c_nei = c_mn(n, e_i(N,i), s_i, r_i, k3, y, t)
-					c_ein = c_mn(e_i(N,i), n, s_i, r_i, k3, y, t_i+1)
-					sum_T2 -= c_ein*c_nei*y[i,t]*prod_resp
-					prod_resp = calc_prod_resp(n, resp[:,t_i,t+1])
-					c_nei = c_mn(n, e_i(N,i), s_i, r_i, k3, y, t+1)
-					sum_R2[t] = c_ein*c_nei*prod_resp
+					# hatTheta2 with cein-cnei
+					sum_T2 += -c_ein*c_nei*y[i,t]*prod_resp
+					# Non-local hatR2
+					sum_R2[t] += c_ein*c_nei*prod_resp
 				end
 			end
 		end
 		fields.hatTheta2[i,t_i] = -2*dt*sum_T2
-		fields.hatR2[i,t_i+1,t_i] = -2*local_R2
 		fields.hatR2[i,t_i+1,1:t_i] = -2*sum_R2
-		
+		fields.hatR2[i,t_i+1,t_i] = -2*local_R2
 	end
 	
 end
