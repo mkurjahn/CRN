@@ -25,7 +25,7 @@ function get_max_num(x0::Vector{Float64}, precision::Float64)
 	for i in 1:num_species
 		x,n = 1,0
 		while abs(x) > precision
-			x = pdf(Poisson(x0[i]), n)
+			x = 1-cdf(Poisson(x0[i]), n)
 			n += 1
 		end
 		max_num[i] = n
