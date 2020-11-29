@@ -208,7 +208,7 @@ function initial_distr_state_space(state_space, x0::Vector{Float64})
 		end
 	end
 	
-	return p0
+	return p0./sum(p0)
 
 end
 
@@ -230,7 +230,7 @@ end
 	Returns a Result struct with time_grid and mean copy numbers
 
 """
-function dynamics_masterOP(master, state_space, tspan::Vector{Float64}, x0::Vector{Float64}, method)
+function dynamics_masterOP(master, state_space, tspan::Vector{Float64}, x0::Vector{Float64}, method; rtn_prob=false)
 
 	# Differential equation
 	function f!(du,u,M,t)
@@ -247,8 +247,11 @@ function dynamics_masterOP(master, state_space, tspan::Vector{Float64}, x0::Vect
 		y[:,t] = calc_mean_masterOP(P.data[:,t], state_space)
 	end
 	
-	return Result(tspan, y)
-
+	if rtn_prob
+		return (P.data, Result(tspan, y))
+	else
+		return Result(tspan, y)
+	end
 end
 
 
@@ -278,7 +281,7 @@ end
 	Returns a Result struct with time_grid and mean copy numbers
 
 """
-function dynamics_masterOP_diag(master, state_space, E::Eigen, tspan, x0)
+function dynamics_masterOP_diag(master, state_space, E::Eigen, tspan, x0; rtn_prob=false)
 
 	er = E.vectors
 	el = inv(er)
@@ -286,18 +289,23 @@ function dynamics_masterOP_diag(master, state_space, E::Eigen, tspan, x0)
 	
 	p0 = initial_distr_state_space(state_space, x0) 
 	y = zeros(length(x0), length(tspan))
+	p = zeros(length(state_space), length(tspan))
 	
 	elp0 = el*p0
 	
-	for (t,t_i) in zip(tspan, 1:length(tspan))
-		p = zeros(length(state_space))
+	for j in 1:length(tspan)
 		for i in 1:length(state_space)
-			@inbounds p[i] = abs(sum(er[i,:].*exp.(d*t).*elp0))
+			@inbounds p[i,j] = abs(sum(er[i,:].*exp.(d*tspan[j]).*elp0))
 		end
-		y[:,t_i] = calc_mean_masterOP(p, state_space)
+		p[:,j] ./= sum(p[:,j])
+		y[:,j] = CRN.calc_mean_masterOP(p[:,j], state_space)
 	end
 	
-	return Result(tspan, y)
+	if rtn_prob
+		return (p, Result(tspan, y))
+	else
+		return Result(tspan, y)
+	end
 
 end
 
