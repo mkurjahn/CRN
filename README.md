@@ -1,6 +1,6 @@
 # CRN.jl
 
-Framework for Chemical Reaction Networks. Code for my Master's thesis. Last updated: Dec. 2020 (c) Maximilian Kurjahn
+Framework for Chemical Reaction Networks. Code for my Master's thesis. Last updated: Dec. 2020 © Maximilian Kurjahn
 
 ## Install this package
 
