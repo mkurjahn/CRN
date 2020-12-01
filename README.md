@@ -1,12 +1,12 @@
 # CRN.jl
 
-Framework for Chemical Reaction Networks.
+Framework for Chemical Reaction Networks. Code for my Master's thesis. Last updated: Dec. 2020 (c) Maximilian Kurjahn
 
 ## Install this package
 
-Open `julia`, type "`]`" to go the package mode and then add the package
+Open `julia`, type "`]`" to go to the package mode and then add the package by
 ```julia 
-pkg> add https://gitlab.gwdg.de/m.kurjahn/crn.git
+pkg> add https://github.com/mkurjahn/CRN.git
 ```
 
 Go back to the normal mode with backspace and use the package via
@@ -16,7 +16,7 @@ using CRN
 
 ## Example Usage
 
-The usage of this framework will be demonstrated for the simple reaction $`A+B\rightarrow C`$ on top of the baseline reactions $`X_i\rightleftharpoons\varnothing`$ for $`X_i\in\lbrace A,B,C \rbrace`$. This means that the number of species is `num_species = 3` and number of interaction reactions is `num_int = 1`. 
+The usage of this framework will be demonstrated for the simple reaction $A+B\rightarrow C$ on top of the baseline reactions $X_i\rightleftharpoons\varnothing$ for $X_i\in\lbrace A,B,C \rbrace$. This means that the number of species is `num_species = 3` and number of interaction reactions is `num_int = 1`. 
 
 ### Define Parameters
 Define reaction constants for creation, annihilation and interaction reaction, respectively.
